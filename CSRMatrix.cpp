@@ -294,24 +294,23 @@ int CSRMatrix<T>::Get_Value_Index(int row,int column)
 
 //calls the corresponding matrix solver, specify the type of solver by typing in an enum "type of solver"
 template <class T>
-void CSRMatrix<T>::solve( Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solver)
+void CSRMatrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver)
 {
     if (type_of_solver == Jacobi_CSR)
     {
-        this->Jacobi_CSR_Solver(vect, vect_output);
+    this->Jacobi_CSR_Solver(vect_b, vect_output);
     }
     else if (type_of_solver == Gauss_Siedel_CSR)
     {
-        this->Gauss_Seidel_CSR_Solver(vect, vect_output);
+        this->Gauss_Seidel_CSR_Solver(vect_b, vect_output);
     }
     else if (type_of_solver == Conjugate_Gradient_CSR)
     {
-        this->Conjugate_Gradient_CSR_Solver(vect, vect_output);
+        this->Conjugate_Gradient_CSR_Solver(vect_b, vect_output);
     }
     else if (type_of_solver == Cholesky_CSR)
     {
-        std::cout << "Fight to implement this continues" << "\n";
-        //this->Cholesky_CSR_Solver(vect, vect_output);
+        this->Cholesky_CSR_Solver(vect_b, vect_output);
     }
     else
     {
@@ -323,7 +322,7 @@ void CSRMatrix<T>::solve( Matrix<T>& vect, Matrix<T>& vect_output, int type_of_s
 
 // Solver method 1 
 template <class T>
-void CSRMatrix<T>::Jacobi_CSR_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void CSRMatrix<T>::Jacobi_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
     bool big_error = true;
     auto* vector_new = new T[vect_output.rows];
@@ -361,13 +360,13 @@ void CSRMatrix<T>::Jacobi_CSR_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
                 }
                 // }
             }
-            vector_new[i] = (vect.values[i] - temp) / this->values[Get_Value_Index(i, i)];
+            vector_new[i] = (vect_b.values[i] - temp) / this->values[Get_Value_Index(i, i)];
         }
         for (int i = 0; i < this->rows; i++)
         {
             vect_output.values[i] = vector_new[i];
         }
-        big_error = check_error_CSR(*this, vect, vect_output);
+        big_error = check_error_CSR(*this, vect_b, vect_output);
 
         if (lp > 10000)
         {
@@ -382,7 +381,7 @@ void CSRMatrix<T>::Jacobi_CSR_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 2
 template <class T>
-void CSRMatrix<T>::Gauss_Seidel_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_output)
+void CSRMatrix<T>::Gauss_Seidel_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
     bool big_error = true;
 
@@ -406,9 +405,9 @@ void CSRMatrix<T>::Gauss_Seidel_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_out
                    
                 }
             }
-            vect_output.values[i] = (vect.values[i] - temp) / this->values[Get_Value_Index(i,i)];
+            vect_output.values[i] = (vect_b.values[i] - temp) / this->values[Get_Value_Index(i,i)];
         }
-        big_error = check_error(*this, vect, vect_output);
+        big_error = check_error_CSR(*this, vect_b, vect_output);
         if (lp > 10000)
         {
             break;
@@ -419,22 +418,22 @@ void CSRMatrix<T>::Gauss_Seidel_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_out
 
 // Solver method 3
 template <class T>
-void CSRMatrix<T>::Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_output)
+void CSRMatrix<T>::Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
     //double tol = 0.00000001;
 
     // Initialize p, Ap and residual r 
     //Ap is inner product output of LHS matrix and p. Use CSR::matVectMult(...) for Ap.
-    auto* r = new Matrix<double>(vect.rows, vect.cols, true); // r = vect
-    auto* p = new Matrix<double>(vect.rows, vect.cols, true); // p = vect
-    auto* Ap = new Matrix<double>(vect.rows, vect.cols, true); // Ap = [0, 0, 0] initially
+    auto* r = new Matrix<double>(vect_b.rows, vect_b.cols, true); // r = vect
+    auto* p = new Matrix<double>(vect_b.rows, vect_b.cols, true); // p = vect
+    auto* Ap = new Matrix<double>(vect_b.rows, vect_b.cols, true); // Ap = [0, 0, 0] initially
 
     //ASK: how can I mar r equals vect more efficiently?
 
-    for (int j = 0; j < vect.rows; j++)
+    for (int j = 0; j < vect_b.rows; j++)
     {
-        r->values[j] = vect.values[j];
-        p->values[j] = vect.values[j];
+        r->values[j] = vect_b.values[j];
+        p->values[j] = vect_b.values[j];
     }
 
     //Set count for counting loops
@@ -444,7 +443,7 @@ void CSRMatrix<T>::Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect, Matrix<T
     while (count < 1000)//check_error(*this, vect, vect_output) || 
     {
         //reset mat*Vect product every new loop
-        for (int j = 0; j < vect.rows; j++)
+        for (int j = 0; j < vect_b.rows; j++)
         {
             Ap->values[j] = 0;
         }
@@ -486,84 +485,111 @@ void CSRMatrix<T>::Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect, Matrix<T
 
 // Solver method 4
 template <class T>
-void CSRMatrix<T>::Cholesky_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_output)
+void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_output)
 {
-    //declare an array where values of the lower triangular matrix will be stored
-    auto* Lower = new CSRMatrix <T>(this->rows, this->cols, 0, true);
+     //declare an array where values of the lower triangular matrix will be stored
+    //auto* Lower = new CSRMatrix <T>(this->rows, this->cols, 0, true);
 
-    for (int i = 0; i < Lower->rows + 1; i++)
+
+    auto* L_Values =      new T[this->rows+this->rows*this->rows/2];
+    auto* L_Row_Position = new int[this->rows+1];
+    auto* L_Col_Index =    new int[this->rows+this->rows * this->rows/2];
+    auto* L_Diagonal = new T[this->rows];
+
+    //auto* LT_Values = new T[this->nnzs];
+    //auto* LT_Row_Position = new int[this->rows + 1];
+    //auto* LT_Col_Index = new int[this->nnzs];
+
+    //for (int i = 0; i < this->nnzs; i++)
+    //{
+    //    //L_Values[i] = -1;
+    //    //LT_Values[i] = -1;
+    //    //L_Col_Index[i] = -1;
+    //}
+    for (int i = 0; i < this->rows + 1; i++)
     {
-        Lower->row_position[i] = 0;
+        L_Row_Position[i] = 0;
+        //LT_Row_Position[i] = 0;
     }
-    //and initialize it to zeros
-    //this->printMatrix();
-    //lets decompose our matrix (this) into lower triangular matrix
+
+    int elem;
+    int elem_to_push=0;
     for (int r = 0; r < this->rows; r++)
     {
-        for (int val_index = this->row_position[r]; val_index < this->row_position[r + 1]; val_index++)
+        elem = this->row_position[r];
+        
+        for (int cg = 0; cg <= r; cg++)
         {
-
-            int c = this->col_index[val_index];
-            if (c < r + 1)
-            {
-                if (c == r)
+                if (cg == r)
                 {//finding the values for elements on diagonal
                     T sum = 0;
-                    for (int new_val_index = this->row_position[r]; new_val_index < val_index; new_val_index++)
+                    for (int val_index = L_Row_Position[r]; val_index < L_Row_Position[r+1]; val_index++)
                     {
-                        int j = this->col_index[new_val_index];
-
-                        if (Lower->Get_Value_Index(c, j) != -1)
-                        {
-                            sum += Lower->values[Lower->Get_Value_Index(c, j)] * Lower->values[Lower->Get_Value_Index(c, j)];
-                        }
+                        sum += L_Values[val_index] * L_Values[val_index];
                     }
-                    T value = sqrt(this->values[this->Get_Value_Index(c, c)] - sum);
-                    Lower->setvalues(value, r, r);
+                    T value = sqrt(this->values[elem] - sum);
+
+                    //Lower->setvalues(value, r, r);
+                    
+                    L_Diagonal[cg] = value;
+                    L_Values[elem_to_push] = value;
+                    L_Col_Index[elem_to_push] = cg;
+                    for (int i = r + 1; i < this->rows + 1; i++)
+                    {
+                        L_Row_Position[i]++;
+
+                    }
+                    elem_to_push++;
+                    
+
                 }//now using the values from diagonals we can find other values
                 else
                 {
                     T sum = 0;
-                    int Max_Condition;
-                    if (this->col_index[val_index] < this->col_index[val_index + 1])
+                    for (int cr = L_Row_Position[r]; cr < L_Row_Position[r+1]; cr++)
                     {
-                        Max_Condition = this->col_index[val_index + 1];
-                    }
-                    else
-                    {
-                        Max_Condition = this->rows;
-                    }
-                    std::cout << "Max COnditiion " << Max_Condition << "\n";
-                    for (int third_val_index = c+1; third_val_index < Max_Condition; third_val_index++)
-                    {
-
-                        int new_c = third_val_index;
-                        for (int new_val_index = Lower->row_position[r]; new_val_index < Lower->row_position[r + 1]; new_val_index++)
+                        if (L_Col_Index[cr] >= cg)
                         {
-                            int j = Lower->col_index[new_val_index];
-                            std::cout << "Value index of Lower->Get_Value_Index(r, j) is " << Lower->Get_Value_Index(r, j) << "\n";
-                            std::cout << "Value index of Lower->Lower->Get_Value_Index(c, j) is " << Lower->Get_Value_Index(third_val_index, j) << "\n";
-
-                            if (Lower->Get_Value_Index(r, j) != -1 and Lower->Get_Value_Index(third_val_index, j) != -1)
+                            break;
+                        }
+                        //else
+                        {
+                            for (int cc = L_Row_Position[cg]; cc < L_Row_Position[cg+1]; cc++)
                             {
-                                T Z = Lower->values[Lower->Get_Value_Index(r, j)];
-                                T Q = Lower->values[Lower->Get_Value_Index(third_val_index, j)];
-                                std::cout << "For value of row =" << r << " and col=" << c << " Z=" << Z << " Q=" << Q << "\n";
-                                sum += Lower->values[Lower->Get_Value_Index(r, j)] * Lower->values[Lower->Get_Value_Index(third_val_index, j)];
+                                if (L_Col_Index[cc] > L_Col_Index[cr])
+                                {
+                                    break;
+                                } 
+                                else if (L_Col_Index[cc] == L_Col_Index[cr])
+                                {
+                                    sum = sum - L_Values[cr] * L_Values[cc];
+                                }
                             }
-
                         }
                     }
-                    T X = this->values[val_index];
-                    T YN = Lower->values[Lower->Get_Value_Index(c, c)];
-                    std::cout << "For value of row =" << r << " and col=" << c << " X=" << X << " YN=" << YN << "\n";
-                    T value = (this->values[val_index] - sum) / Lower->values[Lower->Get_Value_Index(c, c)];
-                    Lower->setvalues(value, r, c);
-                }
-            }
 
+                    if (this->col_index[elem] == cg)
+                    {
+                        sum = sum + this->values[elem];
+                        elem++;
+                    }
+                    //Lower->setvalues(value, r, cg);
+                    if (sum != 0)
+                    {
+                        T value = sum / L_Diagonal[cg];
+                        
+                        L_Values[elem_to_push] = value;
+                        L_Col_Index[elem_to_push] = cg;
+                        for (int i = r + 1; i < this->rows+1; i++)
+                        {
+                            L_Row_Position[i]++;
+                        }
+                        elem_to_push++;
+                    }
+            }
         }
     }
+    
     //Lower->printMatrix();
 
 
@@ -573,64 +599,37 @@ void CSRMatrix<T>::Cholesky_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_output)
     for (int r = 0; r < this->rows; r++)
     {
         s = 0;
-        for (int val_index = Lower->row_position[r]; val_index < Lower->row_position[r+1]; val_index++)
+        for (int val_index = L_Row_Position[r]; val_index < L_Row_Position[r+1]; val_index++)
         {
-            int c = Lower->col_index[val_index];
+            int c = L_Col_Index[val_index];
             if (c < r)
             {
-                s = s + Lower->values[val_index]  * y[c];
+                s = s + L_Values[val_index]  * y[c];
             }
             else
             {
                 break;
             }
         }
-        y[r] = (vect.values[r] - s) / Lower->values[Lower->Get_Value_Index(r,r)];
+        y[r] = (vect.values[r] - s) / L_Diagonal[r];
     }
-
-    //for (int i = 0; i < this->rows; i++)
-    //{
-    //    std::cout << y[i] << " ";
-    //}
-    //std::cout << "\n";
-
+   
     auto* Lower_Transpose = new CSRMatrix <T>(this->rows, this->cols, 0, true);
-    for (int i = 0; i < Lower->rows + 1; i++)
+    for (int i = 0; i < this->rows + 1; i++)
     {
         Lower_Transpose->row_position[i] = 0;
     }
-
-    Lower->Fast_CSR_Transpose(*Lower_Transpose);
-
-    bool Debug = true;
-    if (Debug)
+   
+    for (int i = 0; i < this->rows; i++)
     {
-        auto* Lower_Dense = new Matrix <T>(this->rows, this->cols,  true);
-        auto* Lower_Transpose_Dense = new Matrix <T>(this->rows, this->cols,  true);
-        auto* Input_Dense = new Matrix <T>(this->rows, this->cols,  true);
-        this->Convert_CSRMatrix_To_Matrix(*Input_Dense);
-        Lower->Convert_CSRMatrix_To_Matrix(*Lower_Dense);
-        Lower_Transpose->Convert_CSRMatrix_To_Matrix(*Lower_Transpose_Dense);
-        auto* Test_Matrix = new Matrix <T>(this->rows, this->cols,  true);
-        Lower_Dense->matMatMult(*Lower_Transpose_Dense, *Test_Matrix);
-        T sum = 0;
-        for (int i = 0; i < Test_Matrix->rows * Test_Matrix->cols; i++)
+        for (int val_index = L_Row_Position[i]; val_index < L_Row_Position[i + 1]; val_index++)
         {
-            sum = sum + abs(Test_Matrix->values[i] - Input_Dense->values[i]);
+            Lower_Transpose->setvalues(L_Values[val_index], L_Col_Index[val_index], i);
         }
-        std::cout << "=================================" << "\n";
-        std::cout << "Difference in factorization is : " << sum << "\n";
-        std::cout << "=================================" << "\n";
-
-        delete Lower_Dense;
-        delete Lower_Transpose_Dense;
-        delete Input_Dense;
-        delete Test_Matrix;
     }
+    //Lower->Fast_CSR_Transpose(*Lower_Transpose);
+   
     
-    //Lower_Transpose->printMatrix();
-    //vect.printMatrix();
-    // Perform the back substitution to get x from y=L^T*x
     for (int r = this->rows - 1; r >= 0; r--) //i loop from the bottom to the top row
     {
         T sum = 0;
@@ -646,9 +645,10 @@ void CSRMatrix<T>::Cholesky_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_output)
         }
         vect_output.values[r] = (y[r] - sum) / Lower_Transpose->values[Lower_Transpose->Get_Value_Index(r, r)];
     }
-    //vect_output.printMatrix();
-    //delete[] lower;
-    delete Lower;
+    delete[] L_Values;
+    delete[] L_Row_Position;
+    delete[] L_Col_Index;
+    delete[] L_Diagonal;
     delete Lower_Transpose;
     delete[] y;
 
@@ -708,7 +708,7 @@ void CSRMatrix<T>::Fast_CSR_Transpose(CSRMatrix<T>& Output)
 }
 
 template <class T>
-bool check_error_CSR(CSRMatrix<T>& mat, const Matrix<T>& vect, Matrix<T>& vect_output)
+bool check_error_CSR(CSRMatrix<T>& mat,const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
     T value = 0;
     for (int i = 0; i < mat.rows; i++)
@@ -720,7 +720,7 @@ bool check_error_CSR(CSRMatrix<T>& mat, const Matrix<T>& vect, Matrix<T>& vect_o
             value += mat.values[val_index] * vect_output.values[mat.col_index[val_index]];
 
         }
-        if (abs(value - vect.values[i]) > 0.0001)
+        if (abs(value - vect_b.values[i]) > 0.0001)
         {
             //as soon as one entry has too big error return true
             //so that gauss seidel would continue
