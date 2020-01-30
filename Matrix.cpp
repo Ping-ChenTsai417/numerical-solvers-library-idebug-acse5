@@ -200,47 +200,55 @@ double Matrix<T>::innerProduct(Matrix<T>& vec1, Matrix<T>& vec2)
 template <class T>
 double Matrix<T>::determinant()
 {
-	//// NOTE! determinant only exist for square matrices
-	if (this->rows == 2)
-	{
-		return this->values[0 * this->cols + 0] * this->values[1 * this->cols + 1] - \
-			   this->values[1 * this->cols + 0] * this->values[0 * this->cols + 1];
-	}
+	///// using LU decomposition method
+	// det(A) = det(P) * det(L) * det(U)
+	// det upper, U and lower, L triangular matrices are the product of diagonal elements
+	// det(L) = 1 always so dont need to compute here
+	// det(P) = (-1)^(number of row swap), so dont need to explicitly store P
 
-	else
-	{
-		double det = 0;
-		auto* temp_matrix = new Matrix<T>(this->cols - 1, this->rows - 1, true);
+	// create a copy to store the upper matrix
+	auto* upper = new Matrix<T>(this->rows, this->cols, true);
+	for (int i = 0; i < this->size_of_values; i++)
+		upper->values[i] = this->values[i];
 
-		//x loop over the values in the first row of the matrix
-		for (int x = 0; x < this->rows; x++)
+	// store the number of times row-swapping occurs 
+	// and product of diagonal values
+	int num_swap = 0;
+	double product = 1;
+
+	// Calculate the upper triangular matrix
+	for (int k = 0; k < this->rows; k++) //k loop over pivot
+	{
+		//// Implement partial pivoting
+		int max_row = k;
+		T max_value = upper->values[k * this->cols + k];
+		for (int i = k + 1; i < this->rows; i++) //i loop over each row below pivot
 		{
-			int temp_i = 0;
-			//i loop over each row below the first row of the matrix
-			for (int i = 1; i < this->rows; i++)
+			// find row below the pivot with maximum absolute value
+			if (fabs(upper->values[i * this->cols + k]) > max_value)
 			{
-				int temp_j = 0;
-				//j loop over each column below the first row of the matrix
-				for (int j = 0; j < this->rows; j++)
-				{
-					if (x != j)
-					{
-						// store the values in the temp matrix
-						temp_matrix->values[temp_i * temp_matrix->cols + temp_j] = \
-							                  this->values[i * this-> cols + j];
-						temp_j++;
-					}
-				}
-				temp_i++;
+				max_value = upper->values[i * this->cols + k];
+				max_row = i;
 			}
-			// need to consider alternating positive and negative values
-			det += pow(-1, x) * this->values[0 * this->cols + x] * temp_matrix->determinant();
+		}
+		// make sure the pivot has max value
+		if (max_row != k)
+		{
+			swap_rows(*upper, k, max_row);
+			num_swap++;
 		}
 
-		delete temp_matrix;
-
-		return det;
+		for (int i = k + 1; i < this->rows; i++) //i loop over each row below pivot
+		{
+			T s = upper->values[i * this->cols + k] / upper->values[k * this->cols + k];
+			for (int j = k; j < this->rows; j++)  //j loop over elements for each row
+				upper->values[i * this->cols + j] -= s * upper->values[k * this->cols + j];
+		}
+		product *= upper->values[k * this->cols + k];
 	}
+	
+	double det = pow(-1, num_swap) * product;
+	return det;
 }
 
 
