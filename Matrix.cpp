@@ -265,14 +265,14 @@ void Matrix<T>::inverse(Matrix<T>& inverse_mat)
 
 // Main solver which calls each solver method depending on the input type_of_solver
 template <class T>
-void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solver)
+void Matrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver)
 {
 	//// Make sure that all dimensions agree
 	// Check if our output matrix has had space allocated to it
     if (vect_output.values != nullptr)
     {
         // Check our dimensions match
-        if (this->rows != vect_output.rows || vect.cols != vect_output.cols || vect.cols != 1)
+        if (this->rows != vect_output.rows || vect_b.cols != vect_output.cols || vect_b.cols != 1)
         {
             std::cerr << "Input dimensions for matrices don't match" << std::endl;
             return;
@@ -292,35 +292,35 @@ void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solve
 	//// Call the solver method depending on the type_of solver
 	if (type_of_solver == Jacobi)
 	{
-	    this->Jacobi_Solver(vect, vect_output);
+	this->Jacobi_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Gauss_Siedel)
 	{
-		this->Gauss_Siedel_Solver(vect, vect_output);
+		this->Gauss_Siedel_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Gaussian)
 	{
-		this->Gaussian_Solver(vect, vect_output);
+		this->Gaussian_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == LU)
 	{
-		this->LU_Solver(vect, vect_output);
+		this->LU_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Inverse)
 	{
-		this->Inverse_Solver(vect, vect_output);
+		this->Inverse_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Cholesky)
 	{
-		this->Cholesky_Solver(vect, vect_output);
+		this->Cholesky_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Conjugate_Gradient)
 	{
-		this->Conjugate_Gradient_Solver(vect, vect_output);
+		this->Conjugate_Gradient_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Gauss_Jordan)
 	{
-		this->Gauss_Jordan_Solver(vect, vect_output);
+		this->Gauss_Jordan_Solver(vect_b, vect_output);
 	}
 	else
 	{
@@ -331,7 +331,7 @@ void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solve
 
 // Solver method 1 
 template <class T>
-void Matrix<T>::Jacobi_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Jacobi_Solver(const Matrix<T>& vect_b,Matrix<T>& vect_output)
 {
 	//value which will control if the loop should continue
 	bool big_error = true;
@@ -362,14 +362,14 @@ void Matrix<T>::Jacobi_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 					temp += this->values[j + i * this->cols] * vect_output.values[j];
 				}
 			}
-			vector_new[i] = (vect.values[i] - temp) / (this->values[i + i * this->cols]);
+			vector_new[i] = (vect_b.values[i] - temp) / (this->values[i + i * this->cols]);
 		}
 		for (int i = 0; i < this->rows; i++)
 		{
 			vect_output.values[i] = vector_new[i];
 		}
 
-		big_error = check_error(*this, vect, vect_output);
+		big_error = check_error(*this, vect_b, vect_output);
 		if (lp > 10000)
 		{
 			break;
@@ -380,7 +380,7 @@ void Matrix<T>::Jacobi_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 2
 template <class T>
-void Matrix<T>::Gauss_Siedel_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Gauss_Siedel_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	//value which will control if the loop should continue
 	// if true- continue solver, else -break
@@ -409,9 +409,9 @@ void Matrix<T>::Gauss_Siedel_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 					temp += this->values[j + i * this->cols] * vect_output.values[j];
 				}
 			}
-			vect_output.values[i] = (vect.values[i] - temp) / (this->values[i + i * this->cols]);
+			vect_output.values[i] = (vect_b.values[i] - temp) / (this->values[i + i * this->cols]);
 		}
-		big_error = check_error(*this, vect, vect_output);
+		big_error = check_error(*this, vect_b, vect_output);
 
 		if (lp > 10000)
 		{
@@ -422,20 +422,20 @@ void Matrix<T>::Gauss_Siedel_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 3
 template <class T>
-void Matrix<T>::Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Gaussian_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	//// This method impelment Gaussian with partial pivoting
 
 	// we dont want to change the matrix we want to solve
 	// thus we will create copies of matrix A and vector b
 	auto* upper = new Matrix<T>(this->rows, this->cols, true);
-	auto* b = new Matrix<T>(vect.rows, vect.cols, true);
+	auto* b = new Matrix<T>(vect_b.rows, vect_b.cols, true);
 
 	// copy the values
 	for (int i = 0; i < this->size_of_values; i++)
 		upper->values[i] = this->values[i];
-	for (int i = 0; i < vect.size_of_values; i++)
-		b->values[i] = vect.values[i];
+	for (int i = 0; i < vect_b.size_of_values; i++)
+		b->values[i] = vect_b.values[i];
 
 	for (int k = 0; k < this->rows - 1; k++) //k loop over pivot except the final row
 	{
@@ -479,7 +479,7 @@ void Matrix<T>::Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 4
 template <class T>
-void Matrix<T>::LU_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::LU_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	// Create and allocate memory for the upper - U, lower - L, and permut - P matrices
 	auto* upper = new Matrix<T>(this->rows, this->cols, true);
@@ -497,7 +497,7 @@ void Matrix<T>::LU_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 	// Simplified theory; Ax = b <=> LUx = Pb <=> LUx = d <=> Lc = d ; where Ux = c
 
 	// swap rows in vect using permut (Pb = d); where b = vect
-	permut->matVecMult(vect.values, d);
+	permut->matVecMult(vect_b.values, d);
 
 	// Perform the forward substitution to resolve c from Lc = d
 	forward_substitution(lower, d, c);
@@ -512,7 +512,7 @@ void Matrix<T>::LU_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 5
 template <class T>
-void Matrix<T>::Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Inverse_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	// allocate memory to store the inverse
 	auto* inverse_mat = new Matrix<double>(rows, cols, true);
@@ -521,7 +521,7 @@ void Matrix<T>::Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 	this->inverse(*inverse_mat);
 
 	// obtain the solution Ax = b <=> x = A^{-1}b
-	inverse_mat->matVecMult(vect.values, vect_output.values);
+	inverse_mat->matVecMult(vect_b.values, vect_output.values);
 
 	//deallocate the memory
 	delete inverse_mat;
@@ -529,7 +529,7 @@ void Matrix<T>::Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 6
 template <class T>
-void Matrix<T>::Cholesky_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Cholesky_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	//declare an array where values of the lower triangular matrix will be stored
 	auto* lower = new T[this->size_of_values];
@@ -567,7 +567,7 @@ void Matrix<T>::Cholesky_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 	auto* y = new T[vect_output.size_of_values];
 	T s;
-	y[0] = vect.values[0];
+	y[0] = vect_b.values[0];
 	for (int r = 0; r < this->rows; r++)
 	{
 		s = 0;
@@ -575,7 +575,7 @@ void Matrix<T>::Cholesky_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 		{
 			s = s + lower[c + r * this->cols] * y[c];
 		}
-		y[r] = (vect.values[r] - s) / lower[r + r * this->cols];
+		y[r] = (vect_b.values[r] - s) / lower[r + r * this->cols];
 	}
 
 	// Perform the back substitution to get x from y=L^T*x
@@ -597,20 +597,20 @@ void Matrix<T>::Cholesky_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 7
 template <class T>
-void Matrix<T>::Conjugate_Gradient_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	// Initialize p, Ap and residual r 
 	//Ap is inner product output of LHS matrix and p. Use CSR::matVectMult(...) for Ap.
-	auto* r = new Matrix<double>(vect.rows, vect.cols, true); // r = vect
-	auto* p = new Matrix<double>(vect.rows, vect.cols, true); // p = vect
-	auto* Ap = new Matrix<double>(vect.rows, vect.cols, true); // Ap = [0, 0, 0] initially
+	auto* r = new Matrix<double>(vect_b.rows, vect_b.cols, true); // r = vect
+	auto* p = new Matrix<double>(vect_b.rows, vect_b.cols, true); // p = vect
+	auto* Ap = new Matrix<double>(vect_b.rows, vect_b.cols, true); // Ap = [0, 0, 0] initially
 
 	//ASK: how can I mar r equals vect more efficiently?
 
-	for (int j = 0; j < vect.rows; j++)
+	for (int j = 0; j < vect_b.rows; j++)
 	{
-		r->values[j] = vect.values[j];
-		p->values[j] = vect.values[j];
+		r->values[j] = vect_b.values[j];
+		p->values[j] = vect_b.values[j];
 	}
 
 	//Set count for counting loops
@@ -620,7 +620,7 @@ void Matrix<T>::Conjugate_Gradient_Solver(Matrix<T>& vect, Matrix<T>& vect_outpu
 	while (count < 1000)//check_error(*this, vect, vect_output) || 
 	{
 		//reset mat*Vect product every new loop
-		for (int j = 0; j < vect.rows; j++)
+		for (int j = 0; j < vect_b.rows; j++)
 		{
 			Ap->values[j] = 0;
 		}
@@ -661,22 +661,25 @@ void Matrix<T>::Conjugate_Gradient_Solver(Matrix<T>& vect, Matrix<T>& vect_outpu
 
 	//Print out final solution
 	//vect_output.printMatrix();
+	delete r;
+	delete p;
+	delete Ap;
 }
 
 // Solver method 8
 template <class T>
-void Matrix<T>::Gauss_Jordan_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Gauss_Jordan_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	// we dont want to change the original matrix and vector
 	// so create a temporary storage here
 	auto* temp = new Matrix<T>(this->cols, this->rows, true);
-	auto* b = new Matrix<T>(vect.rows, vect.cols, true);
+	auto* b = new Matrix<T>(vect_b.rows, vect_b.cols, true);
 
 	// copy the values
 	for (int i = 0; i < this->size_of_values; i++)
 		temp->values[i] = this->values[i];
-	for (int i = 0; i < vect.size_of_values; i++)
-		b->values[i] = vect.values[i];
+	for (int i = 0; i < vect_b.size_of_values; i++)
+		b->values[i] = vect_b.values[i];
 
 	// form upper triangular matrix from temp
 	for (int k = 0; k < this->rows - 1; k++) //k loop over pivot except the final row
@@ -830,14 +833,14 @@ void Matrix<T>::swap_rows(Matrix<T>& matrix, int current_row, int max_row)
 
 //vector operation for conjugate gradient
 template<class T>
-void Matrix<T>::CG_CombineVector(T gradient, double alpha, const Matrix<T>& vect)
+void Matrix<T>::CG_CombineVector(T gradient, double alpha, const Matrix<T>& vect_b)
 {
 	for (int j = 0; j < this->rows; j++)
-		this->values[j] = gradient * this->values[j] + alpha * vect.values[j];
+		this->values[j] = gradient * this->values[j] + alpha * vect_b.values[j];
 }
 
 template <class T>
-bool check_error(Matrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output)
+bool check_error(Matrix<T>& mat,const Matrix<T>& vect_b,Matrix<T>& vect_output)
 {
 	double value = 0;
 	for (int i = 0; i < mat.rows; i++)
@@ -848,7 +851,7 @@ bool check_error(Matrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output)
 			value += mat.values[j + i * mat.cols] * vect_output.values[j];
 		
 		}
-		if (abs(value - vect.values[i]) > 0.00001)
+		if (abs(value - vect_b.values[i]) > 0.00001)
 		{
 			return true;
 		}
