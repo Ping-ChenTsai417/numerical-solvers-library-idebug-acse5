@@ -25,6 +25,7 @@ public:
 
 	bool Test_Dense_Solution(Matrix<T>& Vector_X, Matrix<T>& Vector_Actual_B, Matrix<T>& Matrix);
 	bool Test_Sparse_Solution(Matrix<T>& Vector_X, Matrix<T>& Vector_Actual_B, CSRMatrix<T>& Matrix);
+	void File_for_python(Matrix<T>& M, Matrix<T>& b, Matrix<T>& x, std::string file_name);
 
 	void Solver_Timing_Test_All();
 
