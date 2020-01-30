@@ -291,7 +291,7 @@ void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solve
 	//// Call the solver method depending on the type_of solver
 	if (type_of_solver == Jacobi)
 	{
-	this->Jacobi_Solver(vect, vect_output);
+	    this->Jacobi_Solver(vect, vect_output);
 	}
 	else if (type_of_solver == Gauss_Siedel)
 	{
@@ -319,7 +319,7 @@ void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solve
 	}
 	else
 	{
-		std::cerr << "Please ennter a valid type of solver!!!!!" << std::endl;
+		std::cerr << "Please enter a valid type of solver!!!!!" << std::endl;
 		return;
 	}
 }
@@ -422,11 +422,13 @@ void Matrix<T>::Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 	//// This method impelment Gaussian with partial pivoting
 
 	// we dont want to change the matrix we want to solve
-	// thus we create a copy for upper, U
-	// initialise upper to be the same as the matrix we want to solve
+	// thus we create copies of matrix A and vector b
 	auto* upper = new Matrix<T>(this->rows, this->cols, true);
+	auto* b = new Matrix<T>(vect.rows, vect.cols, true);
 	for (int i = 0; i < this->size_of_values; i++)
 		upper->values[i] = this->values[i];
+	for (int i = 0; i < vect.size_of_values; i++)
+		b->values[i] = vect.values[i];
 
 	for (int k = 0; k < this->rows - 1; k++) //k loop over pivot except the final row
 	{
@@ -447,7 +449,7 @@ void Matrix<T>::Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 		if (max_row != k)
 		{
 			swap_rows(*upper, k, max_row);
-			swap_rows(vect, k, max_row);
+			swap_rows(*b, k, max_row);
 		}
 
 		for (int i = k + 1; i < this->rows; i++) //i loop over each row below pivot
@@ -457,14 +459,15 @@ void Matrix<T>::Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 				upper->values[i * this->cols + j] -= s * upper->values[k * this->cols + j];
 
 			// update rhs matrix, b as well
-			vect.values[i] -= s * vect.values[k];
+			b->values[i] -= s * b->values[k];
 		}
 	}
 
 	// do backward substitution to obtain the solution, vect_output
-	back_substitution(upper, vect.values, vect_output.values);
+	back_substitution(upper, b->values, vect_output.values);
 
 	delete upper;
+	delete b;
 }
 
 // Solver method 4

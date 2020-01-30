@@ -298,7 +298,7 @@ void CSRMatrix<T>::solve( Matrix<T>& vect, Matrix<T>& vect_output, int type_of_s
 {
     if (type_of_solver == Jacobi_CSR)
     {
-    this->Jacobi_CSR_Solver(vect, vect_output);
+        this->Jacobi_CSR_Solver(vect, vect_output);
     }
     else if (type_of_solver == Gauss_Siedel_CSR)
     {
@@ -315,7 +315,7 @@ void CSRMatrix<T>::solve( Matrix<T>& vect, Matrix<T>& vect_output, int type_of_s
     }
     else
     {
-        std::cerr << "Please ennter a valid type of solver!!!!!" << std::endl;
+        std::cerr << "Please enter a valid type of solver!!!!!" << std::endl;
         return;
     }
 

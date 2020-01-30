@@ -526,12 +526,12 @@ void Test<T>::Run_General_Solver(int configuration)
             this->Dense_Matrix_Solver_Test(Cholesky);
         }   
         if (configuration == Gaussian || configuration == All_Dense)
-        {//
-         /// if (this->verbose >= 1)
-         //  {
-         //      std::cout << "Running General Solver Test on config : Gaussian" << "\n";
-         //  }
-         //  this->Dense_Matrix_Solver_Test(Gaussian);
+        {
+           if (this->verbose >= 1)
+           {
+               std::cout << "Running General Solver Test on config : Gaussian" << "\n";
+           }
+           this->Dense_Matrix_Solver_Test(Gaussian);
         }
         if (configuration == Gauss_Jordan_inverse || configuration == All_Dense)
         {
