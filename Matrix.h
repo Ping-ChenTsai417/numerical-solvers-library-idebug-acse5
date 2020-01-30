@@ -51,7 +51,7 @@ public:
    void forward_substitution(Matrix* lower, T* vect_in, T* vect_out);
    void back_substitution(Matrix* upper, T* vect_in, T* vect_out);
 
-   // Swap the rows within the matrix (mainly for partial pivoting in LU)
+   // Swap the rows within the matrix (mainly for partial pivoting)
    void swap_rows(Matrix& matrix, int current_row, int max_row);
 
    // vector operation for conjugate gradient method
