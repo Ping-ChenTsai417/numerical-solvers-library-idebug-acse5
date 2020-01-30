@@ -12,6 +12,7 @@ Implements different methods to solve a linear system **Ax = b**, where **A** is
 6.  Cholesky decomposition method
 7.  Conjugate gradient method
 8.  Gauss-Jordan elimination method
+9.  Cramer's Rule
 
 #### Solvers for *sparse* matrix implemented:
 
