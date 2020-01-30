@@ -154,21 +154,101 @@ void Test<T>::Generate_Random_Vector(Matrix<T>& Vector)
         Vector.values[i] = value;
     }
 }
+template<class T>
+void Test<T>::File_for_python(Matrix<T>& M,Matrix<T> &b,Matrix<T> &x, std::string file_name)
+{
+	std::ofstream myfile;
+	myfile.open(file_name + ".txt");
+	myfile << "M=np.array([[";
+	for (int i = 0; i < M.rows; i++)
+	{
+		for (int j = 0; j < M.cols; j++)
+		{
+			if (j != M.cols - 1)
+			{
+				myfile << M.values[i * M.cols + j] << ",";
+			}
+			else
+			{
+				myfile << M.values[i * M.cols + j];
+			}
+		}
+		if (i != M.rows - 1)
+		{
 
+			myfile << "],\n[";
+		};
+	}myfile << "]])\n";
+	myfile << "b=np.array([[";
+	for (int i = 0; i < b.rows; i++)
+	{
+		for (int j = 0; j < b.cols; j++)
+		{
+			if (j != b.cols - 1)
+			{
+				myfile << b.values[i * b.cols + j] << ",";
+			}
+			else
+			{
+				myfile << b.values[i * b.cols + j];
+			}
+		}
+		if (i != M.rows - 1)
+		{
+
+			myfile << "],\n[";
+		};
+	}myfile << "]])\n";
+	myfile << "x=np.array([[";
+	for (int i = 0; i < x.rows; i++)
+	{
+		for (int j = 0; j < x.cols; j++)
+		{
+			if (j != x.cols - 1)
+			{
+				myfile << x.values[i * x.cols + j] << ",";
+			}
+			else
+			{
+				myfile << x.values[i * x.cols + j];
+			}
+		}
+		if (i != x.rows - 1)
+		{
+
+			myfile << "],\n[";
+		};
+	}myfile << "]])\n";
+	myfile << "b_new=M@x\nprint(b-b_new)";
+	myfile.close();
+	
+}
 template <class T>
 void Test<T>::Output_Matrix_To_File(Matrix<T>& M,std::string file_name)
 {
-    std::ofstream myfile;
-    myfile.open(file_name+".csv");
-    for (int i = 0; i < M.rows; i++)
-    {
-        for (int j = 0; j < M.cols; j++)
-        {
-            myfile << M.values[i * M.cols + j] << ",";
-        }
-        myfile << "\n";
-    }
-    myfile.close();
+	std::ofstream myfile;
+	myfile.open(file_name + ".txt");
+	myfile << "[";
+	for (int i = 0; i < M.rows; i++)
+	{
+		for (int j = 0; j < M.cols; j++)
+		{
+			if (j != M.cols - 1)
+			{
+				myfile << M.values[i * M.cols + j] << ",";
+			}
+			else
+			{
+				myfile << M.values[i * M.cols + j];
+			}
+		}
+		if (i != M.rows - 1)
+		{
+
+			myfile << "],\n[";
+		}
+	}myfile << "]";
+	myfile.close();
 }
 
 template <class T>
@@ -185,6 +265,8 @@ void Test<T>::Dense_Matrix_Solver_Test(int Solver_Type)
     this->Initialize_Empty_Vector(*Output_Vector);
 
     DenseMatrix->solve(*Vector_B, *Output_Vector, Solver_Type);
+
+	//File_for_python(*DenseMatrix, *Vector_B, *Output_Vector,  "pythontest");
 
     if (!this->Test_Dense_Solution(*Output_Vector, *Vector_B, *DenseMatrix))
     {
@@ -228,6 +310,12 @@ void Test<T>::Sparse_Matrix_Solver_Test(int Solver_Type)
     this->Initialize_Empty_Vector(*Output_Vector);
 
     Sparse_Matrix->solve(*Vector_B, *Output_Vector, Solver_Type);
+
+
+	auto* Dense_Matrix = new Matrix <double>(this->rows, this->cols, true);
+
+	Sparse_Matrix->Convert_CSRMatrix_To_Matrix(*Dense_Matrix);
+	//File_for_python(*Dense_Matrix, *Vector_B, *Output_Vector,  "pythontest");
 
     if (!this->Test_Sparse_Solution(*Output_Vector, *Vector_B, *Sparse_Matrix))
     {
@@ -484,7 +572,7 @@ void Test<T>::Run_General_Solver(int configuration)
 {
     this->DIAG_MIN = 40;
     this->DIAG_MAX = 80;
-    for (int i = 5; i < 100; i = i + 10)
+    for (int i = 10; i < 101; i = i + 10)
     {
         this->rows = i;
         this->cols = i;
@@ -527,7 +615,7 @@ void Test<T>::Run_General_Solver(int configuration)
         }   
         if (configuration == Gaussian || configuration == All_Dense)
         {
-           if (this->verbose >= 1)
+          if (this->verbose >= 1)
            {
                std::cout << "Running General Solver Test on config : Gaussian" << "\n";
            }
@@ -566,8 +654,8 @@ void Test<T>::Run_Sparse_Solver(int configuration)
     this->DIAG_MIN = 40;
     this->DIAG_MAX = 80;
 
-    this->percentage = 0.001;
-    for (int i = 10; i < 500; i = i + 100)
+    this->percentage = 0.05;
+    for (int i = 10; i < 101; i = i + 10)
     {
         this->rows = i;
         this->cols = i;
@@ -576,15 +664,15 @@ void Test<T>::Run_Sparse_Solver(int configuration)
         {
             if (this->verbose >= 1)
             {
-                std::cout << "Running Sparse Solver Test on config : Jacobi" << "\n";
+                std::cout << "Running Sparse Solver Test on config : Jacobi_CSR" << "\n";
             }
             this->Sparse_Matrix_Solver_Test(Jacobi_CSR);
         }
-        if (configuration == LU || configuration == All_Sparse)
+        if (configuration == Gauss_Siedel_CSR || configuration == All_Sparse)
         {
             if (this->verbose >= 1)
             {
-                std::cout << "Running Sparse Solver Test on config : LU" << "\n";
+                std::cout << "Running Sparse Solver Test on config : Gauss-Seidel_CSR" << "\n";
             }
             this->Sparse_Matrix_Solver_Test(Gauss_Siedel_CSR);
         }
@@ -594,8 +682,7 @@ void Test<T>::Run_Sparse_Solver(int configuration)
             {
                 std::cout << "Running Sparse Solver Test on config : Cholesky_CSR" << "\n";
             }
-            std::cout << "Fight to implement this solver continues" << "\n";
-            //this->Sparse_Matrix_Solver_Test(Cholesky_CSR);
+            this->Sparse_Matrix_Solver_Test(Cholesky_CSR);
         }
         if (configuration == Conjugate_Gradient_CSR || configuration == All_Sparse)
         {
