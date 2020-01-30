@@ -34,17 +34,18 @@ public:
    void inverse(Matrix& inverse_mat);
 
    // Main solver method which calls different type of solver methods 
-   virtual void solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solver);
+   virtual void solve(const Matrix<T>& vect_b,  Matrix<T>& vect_output, int type_of_solver);
 
    // Different methods of solvers to solve Ax = b
-   void Jacobi_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Gauss_Siedel_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void LU_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Cholesky_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Conjugate_Gradient_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Gauss_Jordan_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
+   void Jacobi_Solver(const Matrix<T>& vect_b,  Matrix<T>& vect_output);
+   void Gauss_Siedel_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Gaussian_Solver(const Matrix<T>& vect_b,Matrix<T>& vect_output);
+   void LU_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Inverse_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Cholesky_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Gauss_Jordan_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+
 
    // Additional functions for the solvers
    void decompose_LU(Matrix* upper, Matrix* lower, Matrix* permut);
@@ -55,7 +56,7 @@ public:
    void swap_rows(Matrix& matrix, int current_row, int max_row);
 
    // vector operation for conjugate gradient method
-   void CG_CombineVector(T gradient, double alpha, const Matrix<T>& vect);
+   void CG_CombineVector(T gradient, double alpha, const Matrix<T>& vect_b);
 
 // We want our subclass to know about this
 protected:
