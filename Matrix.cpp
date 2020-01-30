@@ -233,7 +233,8 @@ void Matrix<T>::inverse(Matrix<T>& inverse_mat)
 		}
 	}
 
-	// form lower triangular matrix from temp (basically temp will now contains only the diagonal elements)
+	// form lower triangular matrix from temp
+	// if an upper triangular matirx is passed the result will be a diagonal matrix
 	for (int k = this->rows - 1; k >= 0; k--) //k loop over pivot elements from bottom to top
 	{
 		for (int i = k - 1; i >= 0; i--) //i loop over each row above pivot
@@ -305,9 +306,9 @@ void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solve
 	{
 		this->LU_Solver(vect, vect_output);
 	}
-	else if (type_of_solver == Gauss_Jordan_inverse)
+	else if (type_of_solver == Inverse)
 	{
-		this->Gauss_Jordan_Inverse_Solver(vect, vect_output);
+		this->Inverse_Solver(vect, vect_output);
 	}
 	else if (type_of_solver == Cholesky)
 	{
@@ -316,6 +317,10 @@ void Matrix<T>::solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solve
 	else if (type_of_solver == Conjugate_Gradient)
 	{
 		this->Conjugate_Gradient_Solver(vect, vect_output);
+	}
+	else if (type_of_solver == Gauss_Jordan)
+	{
+		this->Gauss_Jordan_Solver(vect, vect_output);
 	}
 	else
 	{
@@ -422,9 +427,11 @@ void Matrix<T>::Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 	//// This method impelment Gaussian with partial pivoting
 
 	// we dont want to change the matrix we want to solve
-	// thus we create copies of matrix A and vector b
+	// thus we will create copies of matrix A and vector b
 	auto* upper = new Matrix<T>(this->rows, this->cols, true);
 	auto* b = new Matrix<T>(vect.rows, vect.cols, true);
+
+	// copy the values
 	for (int i = 0; i < this->size_of_values; i++)
 		upper->values[i] = this->values[i];
 	for (int i = 0; i < vect.size_of_values; i++)
@@ -505,7 +512,7 @@ void Matrix<T>::LU_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 
 // Solver method 5
 template <class T>
-void Matrix<T>::Gauss_Jordan_Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+void Matrix<T>::Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
 {
 	// allocate memory to store the inverse
 	auto* inverse_mat = new Matrix<double>(rows, cols, true);
@@ -656,6 +663,61 @@ void Matrix<T>::Conjugate_Gradient_Solver(Matrix<T>& vect, Matrix<T>& vect_outpu
 	//vect_output.printMatrix();
 }
 
+// Solver method 8
+template <class T>
+void Matrix<T>::Gauss_Jordan_Solver(Matrix<T>& vect, Matrix<T>& vect_output)
+{
+	// we dont want to change the original matrix and vector
+	// so create a temporary storage here
+	auto* temp = new Matrix<T>(this->cols, this->rows, true);
+	auto* b = new Matrix<T>(vect.rows, vect.cols, true);
+
+	// copy the values
+	for (int i = 0; i < this->size_of_values; i++)
+		temp->values[i] = this->values[i];
+	for (int i = 0; i < vect.size_of_values; i++)
+		b->values[i] = vect.values[i];
+
+	// form upper triangular matrix from temp
+	for (int k = 0; k < this->rows - 1; k++) //k loop over pivot except the final row
+	{
+		for (int i = k + 1; i < this->rows; i++) //i loop over each row below pivot
+		{
+			T s = temp->values[i * this->cols + k] / temp->values[k * this->cols + k];
+			for (int j = k; j < this->rows; j++)  //j loop over elements within each row
+			{
+				temp->values[i * this->cols + j] -= s * temp->values[k * this->cols + j];
+			}
+			// update rhs matrix, b as well
+			b->values[i] -= s * b->values[k];
+		}
+	}
+
+	// form lower triangular matrix from temp
+	// if an upper triangular matirx is passed the result will be a diagonal matrix
+	for (int k = this->rows - 1; k >= 0; k--) //k loop over pivot elements from bottom to top
+	{
+		for (int i = k - 1; i >= 0; i--) //i loop over each row above pivot
+		{
+			T s = temp->values[i * this->cols + k] / temp->values[k * this->cols + k];
+			for (int j = this->rows - 1; j >= k ; j--)  //j loop over elements within each row
+			{
+				temp->values[i * this->cols + j] -= s * temp->values[k * this->cols + j];
+			}
+			// update rhs matrix, b as well
+			b->values[i] -= s * b->values[k];
+		}
+	}
+
+	// divide vector b with the diagonal values of temp
+	// doing this to temp will transform it into an identity matrix (but we dont need to do that here)
+	// we just want the RHS vector which is now the solution, vect_out (x)
+	for (int i = 0; i < vect_output.size_of_values; i++) // loop over all rows
+		vect_output.values[i] = b->values[i] / temp->values[i * this->cols + i];
+
+	delete temp;
+	delete b;
+}
 
 // Decompose this matrix into lower, L and upper, U triangular form with partial pivoting
 // stand on its own because can be called once to solve for multiple RHS vectors

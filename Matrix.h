@@ -41,9 +41,10 @@ public:
    void Gauss_Siedel_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
    void Gaussian_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
    void LU_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Gauss_Jordan_Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
+   void Inverse_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
    void Cholesky_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
    void Conjugate_Gradient_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
+   void Gauss_Jordan_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
 
    // Additional functions for the solvers
    void decompose_LU(Matrix* upper, Matrix* lower, Matrix* permut);
@@ -73,5 +74,5 @@ private:
 template <class T>
 bool check_error(Matrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output);
 
-enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Gauss_Jordan_inverse, Cholesky, Conjugate_Gradient, Last_Dense, All_Dense};
+enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan, Last_Dense, All_Dense};
 enum solver_method_csr   { Jacobi_CSR, Gauss_Siedel_CSR, Cholesky_CSR, Conjugate_Gradient_CSR, Last_Sparse, All_Sparse};

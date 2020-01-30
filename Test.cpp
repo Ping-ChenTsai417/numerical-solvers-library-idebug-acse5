@@ -533,21 +533,29 @@ void Test<T>::Run_General_Solver(int configuration)
            }
            this->Dense_Matrix_Solver_Test(Gaussian);
         }
-        if (configuration == Gauss_Jordan_inverse || configuration == All_Dense)
+        if (configuration == Inverse || configuration == All_Dense)
         {
             if (this->verbose >= 1)
             {
-                std::cout << "Running General Solver Test on config :  Gauss_Jordan_inverse" << "\n";
+                std::cout << "Running General Solver Test on config : Inverse" << "\n";
             }
-            this->Dense_Matrix_Solver_Test(Gauss_Jordan_inverse);
+            this->Dense_Matrix_Solver_Test(Inverse);
         }
         if (configuration == Conjugate_Gradient || configuration == All_Dense)
         {
             if (this->verbose >= 1)
             {
-                std::cout << "Running General Solver Test on config :  Conjugate gradient" << "\n";
+                std::cout << "Running General Solver Test on config : Conjugate gradient" << "\n";
             }
             this->Dense_Matrix_Solver_Test(Conjugate_Gradient);
+        }
+        if (configuration == Gauss_Jordan || configuration == All_Dense)
+        {
+            if (this->verbose >= 1)
+            {
+                std::cout << "Running General Solver Test on config : Gauss Jordan" << "\n";
+            }
+            this->Dense_Matrix_Solver_Test(Gauss_Jordan);
         }
     }
 }
