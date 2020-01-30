@@ -572,7 +572,7 @@ void Test<T>::Run_General_Solver(int configuration)
 {
     this->DIAG_MIN = 40;
     this->DIAG_MAX = 80;
-    for (int i = 10; i < 101; i = i + 10)
+    for (int i = 10; i < 101; i+=10)
     {
         this->rows = i;
         this->cols = i;
@@ -645,6 +645,14 @@ void Test<T>::Run_General_Solver(int configuration)
             }
             this->Dense_Matrix_Solver_Test(Gauss_Jordan);
         }
+        //if (configuration == Cramers || configuration == All_Dense)
+        //{
+        //    if (this->verbose >= 1)
+        //    {
+        //        std::cout << "Running General Solver Test on config : Cramers" << "\n";
+        //    }
+        //    this->Dense_Matrix_Solver_Test(Cramers);
+        //}
     }
 }
 

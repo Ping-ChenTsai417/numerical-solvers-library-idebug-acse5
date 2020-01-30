@@ -29,8 +29,7 @@ public:
    virtual void matVecMult(Matrix<T>& mat_right, Matrix<T>& output);
    void matVecMult(T* vect_in, T* vect_out);
    double innerProduct(Matrix<T>& vec1, Matrix<T>& vec2);
-
-   // Calculate the matrix inverse
+   double determinant();
    void inverse(Matrix& inverse_mat);
 
    // Main solver method which calls different type of solver methods 
@@ -45,7 +44,7 @@ public:
    void Cholesky_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
    void Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
    void Gauss_Jordan_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
-
+   void Cramers_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
 
    // Additional functions for the solvers
    void decompose_LU(Matrix* upper, Matrix* lower, Matrix* permut);
@@ -75,5 +74,5 @@ private:
 template <class T>
 bool check_error(Matrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output);
 
-enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan, Last_Dense, All_Dense};
+enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan, Cramers, Last_Dense, All_Dense};
 enum solver_method_csr   { Jacobi_CSR, Gauss_Siedel_CSR, Cholesky_CSR, Conjugate_Gradient_CSR, Last_Sparse, All_Sparse};

@@ -195,6 +195,55 @@ double Matrix<T>::innerProduct(Matrix<T>& vec1, Matrix<T>& vec2)
 	return scalar;
 }
 
+// Calculate determinant of a matrix
+// using a recursive function
+template <class T>
+double Matrix<T>::determinant()
+{
+	//// NOTE! determinant only exist for square matrices
+	if (this->rows == 2)
+	{
+		return this->values[0 * this->cols + 0] * this->values[1 * this->cols + 1] - \
+			   this->values[1 * this->cols + 0] * this->values[0 * this->cols + 1];
+	}
+
+	else
+	{
+		double det = 0;
+		auto* temp_matrix = new Matrix<T>(this->cols - 1, this->rows - 1, true);
+
+		//x loop over the values in the first row of the matrix
+		for (int x = 0; x < this->rows; x++)
+		{
+			int temp_i = 0;
+			//i loop over each row below the first row of the matrix
+			for (int i = 1; i < this->rows; i++)
+			{
+				int temp_j = 0;
+				//j loop over each column below the first row of the matrix
+				for (int j = 0; j < this->rows; j++)
+				{
+					if (x != j)
+					{
+						// store the values in the temp matrix
+						temp_matrix->values[temp_i * temp_matrix->cols + temp_j] = \
+							                  this->values[i * this-> cols + j];
+						temp_j++;
+					}
+				}
+				temp_i++;
+			}
+			// need to consider alternating positive and negative values
+			det += pow(-1, x) * this->values[0 * this->cols + x] * temp_matrix->determinant();
+		}
+
+		delete temp_matrix;
+
+		return det;
+	}
+}
+
+
 // Calculate the inverse of a matrix
 // users need to allocate the memory themselves and pass it as an input argument
 // this implement the Gauss-jordon method to calculate the inverse
@@ -292,7 +341,7 @@ void Matrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_
 	//// Call the solver method depending on the type_of solver
 	if (type_of_solver == Jacobi)
 	{
-	this->Jacobi_Solver(vect_b, vect_output);
+		this->Jacobi_Solver(vect_b, vect_output);
 	}
 	else if (type_of_solver == Gauss_Siedel)
 	{
@@ -321,6 +370,10 @@ void Matrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_
 	else if (type_of_solver == Gauss_Jordan)
 	{
 		this->Gauss_Jordan_Solver(vect_b, vect_output);
+	}
+	else if (type_of_solver == Cramers)
+	{
+		this->Cramers_Solver(vect_b, vect_output);
 	}
 	else
 	{
@@ -515,7 +568,7 @@ template <class T>
 void Matrix<T>::Inverse_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
 	// allocate memory to store the inverse
-	auto* inverse_mat = new Matrix<double>(rows, cols, true);
+	auto* inverse_mat = new Matrix<T>(rows, cols, true);
 
 	//calculate the inverse for this matrix (using gauss-jordan method)
 	this->inverse(*inverse_mat);
@@ -722,6 +775,37 @@ void Matrix<T>::Gauss_Jordan_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_out
 	delete b;
 }
 
+// Solver method 9
+template <class T>
+void Matrix<T>::Cramers_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
+{
+	// calculate the determinant of the matrix we want to solve
+	double main_det = this->determinant();
+
+	// allocate memory to store a matrix where the columns will be swapped
+	auto* temp = new Matrix<T>(this->rows, this->cols, true);
+
+	// copy the original matrix to temp
+	for (int n = 0; n < this->size_of_values; n++)
+		temp->values[n] = this->values[n];
+
+	for (int j = 0; j < this->cols; j++)
+	{
+		for (int i = 0; i < this->rows; i++)
+		{
+			// set the values in previous column back to be 
+			// the same as the values in the original matrix
+			if (j > 0) temp->values[i * this->cols + j - 1] = this->values[i * this->cols + j - 1];
+			// add vector_b to the column which corresponds to the unknown we are solving
+			temp->values[i * this->cols + j] = vect_b.values[i];
+		}
+		vect_output.values[j] = temp->determinant() / main_det;
+	}
+
+	delete temp;
+}
+
+
 // Decompose this matrix into lower, L and upper, U triangular form with partial pivoting
 // stand on its own because can be called once to solve for multiple RHS vectors
 // Ax = b  <=> LUx = Pb;  where P; permutation matrix (store information on row-swapping)
@@ -849,7 +933,6 @@ bool check_error(Matrix<T>& mat,const Matrix<T>& vect_b,Matrix<T>& vect_output)
 		for (int j = 0; j < mat.cols; j++)
 		{
 			value += mat.values[j + i * mat.cols] * vect_output.values[j];
-		
 		}
 		if (abs(value - vect_b.values[i]) > 0.00001)
 		{
