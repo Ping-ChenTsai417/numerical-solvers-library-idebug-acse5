@@ -38,13 +38,13 @@ public:
 
    // Main solver method which calls different type of sparse solver methods
    // specify the type of solver by typing in an enum "type of solver"
-   void solve(Matrix<T>& vect, Matrix<T>& vect_output, int type_of_solver);
+   void solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver);
  
    // Different methods to solve Ax = b for sparse matrix
-   void Jacobi_CSR_Solver( Matrix<T>& vect, Matrix<T>& vect_output);
-   void Gauss_Seidel_CSR_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
-   void Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_output);
-   void Cholesky_CSR_Solver(Matrix<T>& vect, Matrix<T>& vect_output);
+   void Jacobi_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Gauss_Seidel_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
+   void Cholesky_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
 
    // Conversion between CSRMatrix and dense matrix
    void Convert_CSRMatrix_To_Matrix(Matrix<T>& M);
@@ -52,3 +52,5 @@ public:
    void Fast_CSR_Transpose(CSRMatrix<T>& Output);
 
 };
+template <class T>
+bool check_error_CSR(CSRMatrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output);
