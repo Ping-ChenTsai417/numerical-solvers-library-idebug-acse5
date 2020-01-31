@@ -36,7 +36,7 @@ public:
    void inverse(Matrix& inverse_mat);
 
    // Main solver method which calls different type of solver methods 
-   virtual void solve(const Matrix<T>& vect_b,  Matrix<T>& vect_output, int type_of_solver);
+   virtual void solver(const Matrix<T>& vect_b,  Matrix<T>& vect_output, int type_of_solver);
 
    // Different methods of solvers to solve Ax = b
    void Jacobi_Solver(const Matrix<T>& vect_b,  Matrix<T>& vect_output);
