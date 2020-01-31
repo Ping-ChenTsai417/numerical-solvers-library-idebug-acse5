@@ -31,7 +31,7 @@ To use the solver, simply download and load the following files ([Matrix.h](Matr
 
 ## User instructions
 
-Basic example usage for the solvers in the main method:
+Example usage:
 
  (a) **For dense solvers** (3 x 3 matrix)
  
