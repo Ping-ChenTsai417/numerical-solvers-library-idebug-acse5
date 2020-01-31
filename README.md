@@ -37,9 +37,21 @@ Add codes here
 
 ## Testing
 
-To test the solver, additionally download and load the [Test.h](Test.h) and [Test.cpp](Test.cpp) files that contain the class `Test` which will test the solvers for both dense and sparse matrix. To run the test, uncomment the following part in the [Main_test_solver.cpp](Main_test_solver.cpp) file.
+To test the linear solvers, additionally download and load the [Test.h](Test.h) and [Test.cpp](Test.cpp) files. The class `Test` will test the linear solvers on multiple sizes of diagonally-dominant matrices, **A** that are randomly generated. To run the test, uncomment the following lines in the [Main_test_solver.cpp](Main_test_solver.cpp) file.
+ 
+ (a) Test for dense solvers
+ 
+```c++
+    Test<double> General_Solver;
+    std::cout << "Test for Dense solvers:\n";
+    General_Solver.Run_Test(verb_0, General_Solver_Test, All_Dense);
+```
+
+(a) Test for sparse solvers
 
 ```c++
-Add codes here
+    Test<double> Sparse_Solver;
+	  std::cout << "Test for Sparse solvers:\n";
+    Sparse_Solver.Run_Test(verb_0, CSR_Solver_Test, All_Sparse);
 ```
 
