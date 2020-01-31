@@ -47,11 +47,11 @@ To test the linear solvers, additionally download and load the [Test.h](Test.h) 
     General_Solver.Run_Test(verb_0, General_Solver_Test, All_Dense);
 ```
 
-(a) Test for sparse solvers
+(b) Test for sparse solvers
 
 ```c++
     Test<double> Sparse_Solver;
-	  std::cout << "Test for Sparse solvers:\n";
+    std::cout << "Test for Sparse solvers:\n";
     Sparse_Solver.Run_Test(verb_0, CSR_Solver_Test, All_Sparse);
 ```
 
