@@ -42,6 +42,7 @@ void Test<T>::Generate_Sparse_CSR_Matrix(CSRMatrix<T>& M)
 template <class T>
 void Test<T>::Generate_Dense_CSR_Matrix(CSRMatrix<T>& M)
 {
+    this->Initialize_CSRMatrix(M);
     //Engine setup for random number generation
     std::random_device r;
     std::default_random_engine eng{ r() };
@@ -312,9 +313,9 @@ void Test<T>::Sparse_Matrix_Solver_Test(int Solver_Type)
     Sparse_Matrix->solve(*Vector_B, *Output_Vector, Solver_Type);
 
 
-	auto* Dense_Matrix = new Matrix <double>(this->rows, this->cols, true);
+	//auto* Dense_Matrix = new Matrix <double>(this->rows, this->cols, true);
 
-	Sparse_Matrix->Convert_CSRMatrix_To_Matrix(*Dense_Matrix);
+	//Sparse_Matrix->Convert_CSRMatrix_To_Matrix(*Dense_Matrix);
 	//File_for_python(*Dense_Matrix, *Vector_B, *Output_Vector,  "pythontest");
 
     if (!this->Test_Sparse_Solution(*Output_Vector, *Vector_B, *Sparse_Matrix))
@@ -508,7 +509,7 @@ void Test<T>::Solver_Timing_Test_All()
         }
     }
 
-    for (int i = Jacobi_CSR; i != Cholesky_CSR; i++)
+    for (int i = Jacobi_CSR; i != Last_Sparse; i++)
     {
         this->Initialize_Empty_Vector(*Output_Vector);
         std::chrono::steady_clock::time_point Begin_Sparse = std::chrono::steady_clock::now();
@@ -525,7 +526,187 @@ void Test<T>::Solver_Timing_Test_All()
    delete DenseMatrix;
    delete Vector_B;
    delete Output_Vector;
+}
 
+template <class T>
+void Test<T>::Time_Solvers_Dense()
+{
+
+    //enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Gauss_Jordan_inverse, Cholesky, Conjugate_Gradient, Last_Dense, All_Dense };
+    //enum solver_method_csr { Jacobi_CSR, Gauss_Siedel_CSR, Cholesky_CSR, Conjugate_Gradient_CSR, Last_Sparse, All_Sparse };
+    std::ofstream myfile;
+    //std::string tmp = "Dense_Test" + this->Test_Number + ".csv";
+    myfile.open("Dense_Test_100_200.csv");
+
+    myfile << "Matrix Size" << "," << "Jacobi" << "," << "Gauss_Siedel" << "," << "Gaussian" << "," << "LU" << "," << "Inverse" << "," << "Cholesky" << "," << "Conjugate_Gradient" << "," << "Gauss_Jordan" <<  "," << "Cramers" << ","<<"Jacobi_CSR" << "," << "Gauss_Siedel_CSR" << "," << "Cholesky_CSR" << "," << "Conjugate_Gradient_CSR" << "\n";
+
+ 
+    
+
+    for (int j = 1; j < 20; j++)
+    {
+        std::cout << j << "\n";
+        this->verbose = 0;
+        this->rows = 10*j;
+        this->cols = 10*j;
+        this->DIAG_MIN = 100;
+        this->DIAG_MAX = 200;
+        auto* DenseMatrix = new Matrix   <T>(this->rows, this->cols, true);
+        auto* Sparse_Matrix = new CSRMatrix <T>(this->rows, this->cols, 0, true);
+        auto* Vector_B = new Matrix   <T>(this->rows, 1, true);
+
+        this->Generate_Random_Vector(*Vector_B);
+        this->Generate_Dense_CSR_Matrix(*Sparse_Matrix);
+        //Sparse_Matrix->printMatrix();
+        Sparse_Matrix->Convert_CSRMatrix_To_Matrix(*DenseMatrix);
+
+        myfile << 10*j << ",";
+
+        double timing;
+
+        for (int i = Jacobi; i != Last_Dense; i++)
+        {
+           
+                if (i == Cramers && j > 20)
+                {
+                    myfile  << ",";
+                }
+                else
+                {
+                    timing = this->Test_Timing_Dense(*Vector_B, *DenseMatrix, i);
+                    myfile << timing << ",";
+                }
+            
+        }
+
+       for (int i = Jacobi_CSR; i != Last_Sparse; i++)
+       {
+       
+          timing = this->Test_Timing_Sparse(*Vector_B, *Sparse_Matrix, i);
+           myfile << timing << ",";
+       
+       }
+
+        myfile << "\n";
+
+
+
+        delete Vector_B;
+        delete DenseMatrix;
+        delete Sparse_Matrix;
+    }
+
+    myfile.close();
+
+}
+
+template <class T>
+void Test<T>::Time_Solvers_Sparse()
+{
+
+    //enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan, Jacobi_Threaded, Cramers, Last_Dense, All_Dense };
+    //enum solver_method_csr { Jacobi_CSR, Gauss_Siedel_CSR, Cholesky_CSR, Conjugate_Gradient_CSR, Last_Sparse, All_Sparse };
+    std::ofstream myfile;
+    //std::string tmp = "Sparse_Test_"+ this->Test_Number+ ".csv";
+    myfile.open("Sparse_Test_100_200.csv");
+
+    myfile << "Matrix Size"<< "," << "Sparsity"<< "," << "Jacobi" << "," << "Gauss_Siedel" << "," <<"Gaussian"<<","<< "LU" << "," <<"Inverse"<< "," << "Cholesky" << "," << "Conjugate_Gradient" << ","<<"Gauss_Jordan"<<"," << "Cramers"<< ","<<"Jacobi_CSR" << "," << "Gauss_Siedel_CSR" << "," << "Cholesky_CSR" << "," << "Conjugate_Gradient_CSR" << "\n";
+
+    for (int j = 1; j < 20; j++)
+    {
+
+        int size = 10;
+
+        std::cout << j << "\n";
+        this->verbose = 0;
+
+        this->rows = size * j;
+        this->cols = size * j;
+        
+        this->DIAG_MIN = 100;
+        this->DIAG_MAX = 200;
+        this->percentage = 0.01;
+        auto* DenseMatrix = new Matrix   <T>(this->rows, this->cols, true);
+        auto* Sparse_Matrix = new CSRMatrix <T>(this->rows, this->cols, 0, true);
+        auto* Vector_B = new Matrix   <T>(this->rows, 1, true);
+        
+        this->Generate_Random_Vector(*Vector_B);
+        this->Generate_Sparse_CSR_Matrix(*Sparse_Matrix);
+        Sparse_Matrix->Convert_CSRMatrix_To_Matrix(*DenseMatrix);
+
+        myfile << size * j << ",";
+        myfile << percentage << ",";
+
+        double timing;
+
+        for (int i = Jacobi; i != Last_Dense; i++)
+        {
+            
+                timing = this->Test_Timing_Dense(*Vector_B, *DenseMatrix, i);
+                myfile << timing << ",";
+          
+        }
+
+        for (int i = Jacobi_CSR; i != Last_Sparse; i++)
+        {
+
+            timing = this->Test_Timing_Sparse(*Vector_B, *Sparse_Matrix, i);
+            myfile << timing << ",";
+        }
+
+        myfile << "\n";
+
+
+
+        delete Vector_B;
+        delete DenseMatrix;
+        delete Sparse_Matrix;
+    }
+
+    myfile.close();
+
+}
+
+template <class T>
+double Test<T>::Test_Timing_Sparse(Matrix<T>& Vector_B, CSRMatrix<T>& M, int Solver)
+{
+    auto* Output_Vector = new Matrix   <T>(this->rows, 1, true);
+    this->Initialize_Empty_Vector(*Output_Vector);
+
+    std::chrono::steady_clock::time_point Begin_Sparse = std::chrono::steady_clock::now();
+    M.solve(Vector_B, *Output_Vector, Solver);
+    std::chrono::steady_clock::time_point End_Sparse = std::chrono::steady_clock::now();
+    if (this->Test_Sparse_Solution(*Output_Vector, Vector_B, M))
+    {
+        delete Output_Vector;
+        return std::chrono::duration_cast<std::chrono::microseconds>(End_Sparse - Begin_Sparse).count();
+    }
+    else
+    {
+        delete Output_Vector;
+        return -1;
+    }
+}
+
+template <class T>
+double Test<T>::Test_Timing_Dense(Matrix<T>& Vector_B, Matrix<T>& M,int Solver)
+{
+    auto* Output_Vector = new Matrix   <T>(this->rows, 1, true);
+    this->Initialize_Empty_Vector(*Output_Vector);
+
+    std::chrono::steady_clock::time_point Begin_Dense = std::chrono::steady_clock::now();
+    M.solve(Vector_B, *Output_Vector, Solver);
+    std::chrono::steady_clock::time_point End_Dense = std::chrono::steady_clock::now();
+    if (this->Test_Dense_Solution(*Output_Vector, Vector_B, M))
+    {
+        delete Output_Vector;
+        return std::chrono::duration_cast<std::chrono::microseconds>(End_Dense - Begin_Dense).count();
+    }
+    else
+    {
+        delete Output_Vector;
+        return -1;
+    }
 }
 
 template <class T>
@@ -562,15 +743,17 @@ void Test<T>::Run_Test(int verbose, int test_index,int configuration)
         std::cout << "Test " << test_index << " Passed";
         std::cout << "\n" << "###########################################################" << "\n" << "\n";
 
-    } 
+    }
+
+    
 }
 
 template <class T>
 void Test<T>::Run_General_Solver(int configuration)
 {
     this->DIAG_MIN = 40;
-    this->DIAG_MAX = 80;
-    for (int i = 10; i < 101; i += 10)
+    this->DIAG_MAX = 70;
+    for (int i = 10; i < 101; i = i + 10)
     {
         this->rows = i;
         this->cols = i;
@@ -605,10 +788,6 @@ void Test<T>::Run_General_Solver(int configuration)
             {
                 std::cout << "Running General Solver Test on config : Cholesky Decomposition" << "\n";
             }
-            //this->DIAG_MIN = 10;
-            //this->DIAG_MAX = 20;
-            //this->GENERAL_MIN = 0;
-            //this->GENERAL_MAX = 1;
             this->Dense_Matrix_Solver_Test(Cholesky);
         }   
         if (configuration == Gaussian || configuration == All_Dense)
@@ -643,14 +822,14 @@ void Test<T>::Run_General_Solver(int configuration)
             }
             this->Dense_Matrix_Solver_Test(Gauss_Jordan);
         }
-        if (configuration == Cramers || configuration == All_Dense)
-        {
-            if (this->verbose >= 1)
+	    if (configuration == Cramers || configuration == All_Dense)
             {
-                std::cout << "Running General Solver Test on config : Cramers" << "\n";
+		    if (this->verbose >= 1)
+		    {
+			    std::cout << "Running General Solver Test on config : Cramers" << "\n";
+		    }
+		    this->Dense_Matrix_Solver_Test(Cramers);
             }
-            this->Dense_Matrix_Solver_Test(Cramers);
-        }
     }
 }
 
@@ -660,7 +839,7 @@ void Test<T>::Run_Sparse_Solver(int configuration)
     this->DIAG_MIN = 40;
     this->DIAG_MAX = 80;
 
-    this->percentage = 0.05;
+    this->percentage = 0.01;
     for (int i = 10; i < 101; i = i + 10)
     {
         this->rows = i;
