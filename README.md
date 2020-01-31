@@ -147,4 +147,4 @@ To run the test, uncomment the following blocks in the [Main_test_solver.cpp](Ma
     Sparse_Solver.Run_Test(verb_0, CSR_Solver_Test, All_Sparse);
 ```
 
-The first input argument is an `enum` type which dicates the amount of information printed on the screen when the tests are run. `verb_0` will displays the minimum amount of information which is whether the method is solving the system correctly. Additionally, `verb_1` will also shows the discrepancy between the actual **x** and the expected **x** for each solver method.
+The first input argument is an `enum` type which dicates the amount of information printed on the screen when the tests are run. `verb_0` will displays the minimum amount of information which is whether the method is solving the system correctly. Additionally, `verb_1` will also shows the discrepancy between the actual **b** and the **b** calculated from mulipling **A** with calculated vector **x** for each solver method.
