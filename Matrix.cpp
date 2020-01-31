@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <memory>
 #include <math.h>
-#include <algorithm>
 
 // Constructor - using an initialisation list here
 template <class T>
@@ -66,7 +65,7 @@ void Matrix<T>::printMatrix()
 template <class T>
 void Matrix<T>::matMatMult(Matrix<T>& mat_right, Matrix<T>& output)
 {
-	// Check our dimensions match
+	// Check if our dimensions match
 	if (this->cols != mat_right.rows)
 	{
 		std::cerr << "Input dimensions for matrices don't match" << std::endl;
@@ -77,7 +76,7 @@ void Matrix<T>::matMatMult(Matrix<T>& mat_right, Matrix<T>& output)
 	if (output.values != nullptr)
 	{
 		// Check our dimensions match
-		if (this->rows != output.rows)//|| this->cols != output.cols)
+		if (this->rows != output.rows)
 		{
 			std::cerr << "Input dimensions for matrices don't match" << std::endl;
 			return;
@@ -124,8 +123,8 @@ void Matrix<T>::matVecMult(Matrix<T>& mat_right, Matrix<T>& output)
 	// Check if our output matrix has had space allocated to it
 	if (output.values != nullptr)
 	{
-		// Check our dimensions match
-		if (this->rows != output.rows)//|| this->cols != output.cols)
+		// Check if our dimensions match
+		if (this->rows != output.rows)
 		{
 			std::cerr << "Input dimensions for matrices don't match" << std::endl;
 			return;
@@ -248,7 +247,11 @@ double Matrix<T>::determinant()
 	}
 	
 	double det = pow(-1, num_swap) * product;
+	delete upper;
+
 	return det;
+
+	
 }
 
 
@@ -340,7 +343,7 @@ void Matrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_
     {
         vect_output.values = new T[this->rows];
     }
-    // Set values to zero before hand
+    // Set values to zero before hand in case user didn't do it
     for (int i = 0; i < vect_output.size_of_values; i++)
     {
         vect_output.values[i] = 0;
@@ -395,23 +398,20 @@ template <class T>
 void Matrix<T>::Jacobi_Solver(const Matrix<T>& vect_b,Matrix<T>& vect_output)
 {
 	//value which will control if the loop should continue
+	//if true- continue, else break
 	bool big_error = true;
 
+	//vector to store updated output values
 	auto* vector_new = new T[vect_output.size_of_values];
-
-	// set the output vector to zeros, just in case
-	for (int i = 0; i < vect_output.rows * vect_output.cols; i++)
-	{
-		vect_output.values[i] = 0;
-	}
-
+	//temporary value needed for our looping
 	double temp = 0;
+	//counter of loops
 	int lp = 0;
+
+	// continuue loop as long as error is bigger than we want
 	while (big_error)
 	{
 		lp++;
-		//std::cout << "Loop no " << lp << std::endl;
-		//vect_output.printValues();
 		for (int i = 0; i < this->rows; i++)
 		{
 			temp = 0;
@@ -419,19 +419,21 @@ void Matrix<T>::Jacobi_Solver(const Matrix<T>& vect_b,Matrix<T>& vect_output)
 			{
 				if (i != j)
 				{
-					//assuming row-order
+					//assuming row-order here
 					temp += this->values[j + i * this->cols] * vect_output.values[j];
 				}
 			}
 			vector_new[i] = (vect_b.values[i] - temp) / (this->values[i + i * this->cols]);
 		}
+		//once all elements of vector_new have been updated, set them as new vector_output
 		for (int i = 0; i < this->rows; i++)
 		{
 			vect_output.values[i] = vector_new[i];
 		}
-
+		//check how big error is
 		big_error = check_error(*this, vect_b, vect_output);
-		if (lp > 10000)
+		//if there were 10000 loops already, break no matter how big the error is 
+		if (lp > 1000)
 		{
 			break;
 		}
@@ -447,18 +449,15 @@ void Matrix<T>::Gauss_Siedel_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_out
 	// if true- continue solver, else -break
 	bool big_error = true;
 
-	// set the output vector to zeros, just in case
-	for (int i = 0; i < vect_output.rows * vect_output.cols; i++)
-	{
-		vect_output.values[i] = 0;
-	}
-
+	//temporary value needed for our looping
 	double temp = 0;
+	//counter of loops
 	int lp = 0;
+
+	//continuue loop as long as error is bigger than we want
 	while (big_error)
 	{
 		lp++;
-		//std::cout << "Loop no " << lp << std::endl;
 		for (int i = 0; i < this->rows; i++)
 		{
 			temp = 0;
@@ -470,10 +469,14 @@ void Matrix<T>::Gauss_Siedel_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_out
 					temp += this->values[j + i * this->cols] * vect_output.values[j];
 				}
 			}
+			//update value in the vector_output as soon as it is calculated
+			//do not wait untill the entire vector is changed - this differentiaties Gauss-Seidel from Jacobian method
 			vect_output.values[i] = (vect_b.values[i] - temp) / (this->values[i + i * this->cols]);
 		}
+		//check how big the error is
 		big_error = check_error(*this, vect_b, vect_output);
 
+		//if there were 10000 loops already, break no matter how big the error is 
 		if (lp > 10000)
 		{
 			break;
@@ -600,7 +603,7 @@ void Matrix<T>::Cholesky_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 	{
 		lower[k] = 0;
 	}
-	//lets decompose our matrix (this) into lower triangular matrix
+	//lets decompose our matrix(this) into lower triangular matrix
 	for (int r = 0; r < this->rows; r++)
 	{
 		for (int c = 0; c < r + 1; c++)
@@ -625,7 +628,12 @@ void Matrix<T>::Cholesky_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 			}
 		}
 	}
-
+	
+	//M*x=b
+	//L*L^T*x=b
+	//lets assume y=L^T*x
+	//so L*y=b
+	//lets perform the forward substitution to get y
 	auto* y = new T[vect_output.size_of_values];
 	T s;
 	y[0] = vect_b.values[0];
@@ -666,7 +674,6 @@ void Matrix<T>::Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& ve
 	auto* p = new Matrix<double>(vect_b.rows, vect_b.cols, true); // p = vect
 	auto* Ap = new Matrix<double>(vect_b.rows, vect_b.cols, true); // Ap = [0, 0, 0] initially
 
-	//ASK: how can I mar r equals vect more efficiently?
 
 	for (int j = 0; j < vect_b.rows; j++)
 	{
@@ -686,17 +693,12 @@ void Matrix<T>::Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& ve
 			Ap->values[j] = 0;
 		}
 		auto* r_old = r;
-		/*std::cout << "count : "<< count<<" , old r :" << std::endl;
-		r_old->printMatrix();
-		std::cout << "count : " << count << " , old p :" << std::endl;
-		p->printMatrix();*/
+		
 
 		this->matVecMult(*p, *Ap); // calculate Ap
-		/*std::cout << "count : " << count << " , old Ap :" << std::endl;
-		Ap->printMatrix();*/
+		
 
-		double alpha = this->innerProduct(*r, *r) / std::max(this->innerProduct(*p, *Ap), near_zero);
-		// std::cout << "count : " << count << " , old alpha :" << alpha<<std::endl;
+		double alpha = this->innerProduct(*r, *r) / (this->innerProduct(*p, *Ap) > near_zero ? this->innerProduct(*p, *Ap) : near_zero);      
 
 
 		vect_output.CG_CombineVector(1, alpha, *p);// Set gradient to 1 
@@ -705,7 +707,7 @@ void Matrix<T>::Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& ve
 		if (sqrt(this->innerProduct(*r, *r)) < tol) // check if residual reach tolerance
 			break;
 
-		double beta = this->innerProduct(*r, *r) / std::max(this->innerProduct(*r_old, *r_old), near_zero);
+		double beta = this->innerProduct(*r, *r) / (this->innerProduct(*p, *Ap) > near_zero ? this->innerProduct(*p, *Ap) : near_zero);
 
 		// After first loop , let p = r
 		if (count != 0)
@@ -720,8 +722,6 @@ void Matrix<T>::Conjugate_Gradient_Solver(const Matrix<T>& vect_b, Matrix<T>& ve
 		count++;
 	}
 
-	//Print out final solution
-	//vect_output.printMatrix();
 	delete r;
 	delete p;
 	delete Ap;
@@ -876,6 +876,9 @@ void Matrix<T>::decompose_LU(Matrix<T>* upper, Matrix<T>* lower, Matrix<T>* perm
 	} lower->values[this->size_of_values - 1] = 1; // value of the final element in the lower matrix always equal to 1
 }
 
+
+
+
 // Perform forward substitution on a lower triangular matrix, L
 // lower * vect_out = vect_in 
 template <class T>
@@ -931,6 +934,7 @@ void Matrix<T>::CG_CombineVector(T gradient, double alpha, const Matrix<T>& vect
 		this->values[j] = gradient * this->values[j] + alpha * vect_b.values[j];
 }
 
+//function which calculates the error for Gauss-Seidel and Jacobian methods
 template <class T>
 bool check_error(Matrix<T>& mat,const Matrix<T>& vect_b,Matrix<T>& vect_output)
 {
@@ -940,9 +944,11 @@ bool check_error(Matrix<T>& mat,const Matrix<T>& vect_b,Matrix<T>& vect_output)
 		value = 0;
 		for (int j = 0; j < mat.cols; j++)
 		{
+			//calculate values of b vector based on current solution
 			value += mat.values[j + i * mat.cols] * vect_output.values[j];
+		
 		}
-		if (abs(value - vect_b.values[i]) > 0.00001)
+		if (abs(value - vect_b.values[i]) > mat.tol)
 		{
 			return true;
 		}
