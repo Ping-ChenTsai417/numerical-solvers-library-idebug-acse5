@@ -1,4 +1,7 @@
-#pragma once
+#ifndef MY_CRS_MATRIX_CLASS
+
+#define MY_CRS_MATRIX_CLASS
+
 #include "Matrix.h"
 
 template <class T>
@@ -49,8 +52,7 @@ public:
    // Conversion between CSRMatrix and dense matrix
    void Convert_CSRMatrix_To_Matrix(Matrix<T>& M);
    void Convert_Matrix_To_CSR_Matrix(Matrix<T>& M);
-   void Fast_CSR_Transpose(CSRMatrix<T>& Output);
-
 };
 template <class T>
 bool check_error_CSR(CSRMatrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output);
+#endif // !MY_CRS_MATRIX_CLASS
