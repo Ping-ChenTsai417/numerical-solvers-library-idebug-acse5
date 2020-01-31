@@ -256,7 +256,7 @@ double Matrix<T>::determinant()
 
 // Calculate the inverse of a matrix
 // users need to allocate the memory themselves and pass it as an input argument
-// this implement the Gauss-jordon method to calculate the inverse
+// this implement the Gauss-jordan method to calculate the inverse
 template <class T>
 void Matrix<T>::inverse(Matrix<T>& inverse_mat)
 {
@@ -322,7 +322,7 @@ void Matrix<T>::inverse(Matrix<T>& inverse_mat)
 
 // Main solver which calls each solver method depending on the input type_of_solver
 template <class T>
-void Matrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver)
+void Matrix<T>::solver(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver)
 {
 	//// Make sure that all dimensions agree
 	// Check if our output matrix has had space allocated to it
