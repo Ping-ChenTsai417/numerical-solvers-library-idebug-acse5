@@ -41,7 +41,7 @@ public:
 
    // Main solver method which calls different type of sparse solver methods
    // specify the type of solver by typing in an enum "type of solver"
-   void solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver);
+   void solver(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver);
  
    // Different methods to solve Ax = b for sparse matrix
    void Jacobi_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
