@@ -195,11 +195,10 @@ double Matrix<T>::innerProduct(Matrix<T>& vec1, Matrix<T>& vec2)
 }
 
 // Calculate determinant of a matrix
-// using a recursive function
+// using LU decomposition method
 template <class T>
 double Matrix<T>::determinant()
 {
-	///// using LU decomposition method
 	// det(A) = det(P) * det(L) * det(U)
 	// det upper, U and lower, L triangular matrices are the product of diagonal elements
 	// det(L) = 1 always so dont need to compute here
@@ -264,7 +263,7 @@ void Matrix<T>::inverse(Matrix<T>& inverse_mat)
 	// we dont want to change the original matrix so create a temporary storage
 	auto* temp = new Matrix<T>(this->cols, this->rows, true);
 
-	// initialise the matrices
+	// initialise values in the matrices
 	for (int i = 0; i < this->rows; i++)
 	{
 		for (int j = 0; j < this->cols; j++)
@@ -316,8 +315,6 @@ void Matrix<T>::inverse(Matrix<T>& inverse_mat)
 	{
 		for (int j = 0; j < this->cols; j++) // loop over all columns
 			inverse_mat.values[i * this->cols + j] /= temp->values[i * this->cols + i];
-
-		temp->values[i * this->cols + i] /= temp->values[i * this->cols + i];
 	}
 
 	delete temp;
