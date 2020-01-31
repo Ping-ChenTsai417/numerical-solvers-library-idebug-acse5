@@ -292,7 +292,7 @@ int CSRMatrix<T>::Get_Value_Index(int row,int column)
 
 //calls the corresponding matrix solver, specify the type of solver by typing in an enum "type of solver"
 template <class T>
-void CSRMatrix<T>::solve(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver)
+void CSRMatrix<T>::solver(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type_of_solver)
 {
 
 	//// Make sure that all dimensions agree
@@ -355,28 +355,34 @@ void CSRMatrix<T>::Jacobi_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_ou
     }
 
     T temp = 0;
-    int inter;
     int lp = 0;
     while (big_error)
     {
         lp++;
+        //For each of the rows in the matrix
         for (int i = 0; i < this->rows; i++)
         {
             temp = 0;
+            //Iterate over all values in the row
             for (int val_index = this->row_position[i]; val_index < this->row_position[i + 1]; val_index++)
             {
+                // If we are not on diagonal
                 if (i != this->col_index[val_index])
                 {
+                    //Sum the products for each row
                     temp += this->values[val_index] * vect_output.values[this->col_index[val_index]];
 
                 }
             }
+            // Assign the value to temporary vector
             vector_new[i] = (vect_b.values[i] - temp) / this->values[Get_Value_Index(i, i)];
         }
+        //Copy content of temporary vector to output vector
         for (int i = 0; i < this->rows; i++)
         {
             vect_output.values[i] = vector_new[i];
         }
+        //Check for convergence
         big_error = check_error_CSR(*this, vect_b, vect_output);
 
         if (lp > 10000)
@@ -394,6 +400,8 @@ void CSRMatrix<T>::Jacobi_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_ou
 template <class T>
 void CSRMatrix<T>::Gauss_Seidel_CSR_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output)
 {
+    //Algorithm identical to Solver Method 1 with the only difference being the fact that as the values are updated they are also used in calculation of subsequent values
+    //This results in more robust solver, which has slightly less constraining conditions of convergence
     bool big_error = true;
 
 
@@ -493,20 +501,29 @@ void CSRMatrix<T>::Conjugate_Gradient_CSR_Solver(const Matrix<T>& vect_b, Matrix
 template <class T>
 void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_output)
 {
-    
+    //In this method we solve the linear system in the form of A*x=b, in following steps:
+    // 1. Find matrix L such that L*L' (L transpose ) = A
+    // 2. Define L'* x as y and solve L*y=b for y by forward substitution
+    // 3. Calculate L' (not trivial since we are using CSR matrix)
+    // 4. Knowing y and L' solve L'x = y for x
+    //Declare containers to store lower diagonal matrix, 
     auto* L_Values =      new T[this->rows*this->rows];
     auto* L_Row_Position = new int[this->rows+1];
     auto* L_Col_Index =    new int[this->rows * this->rows];
     auto* L_Diagonal = new T[this->rows];
 
+    //Initialize row positions of the lower diagonal matrix to 0
     for (int i = 0; i < this->rows + 1; i++)
     {
         L_Row_Position[i] = 0;
     }
     int elem;
     int elem_to_push=0;
+    // 1. Find matrix L
+    //For each row of the input matrix
     for (int r = 0; r < this->rows; r++)
     {
+        //Track which element you are about to access
         elem = this->row_position[r];
         
         for (int cg = 0; cg <= r; cg++)
@@ -519,7 +536,7 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
                         sum += L_Values[val_index] * L_Values[val_index];
                     }
                     T value = sqrt(this->values[elem] - sum);
-                    
+                    //Update L matrix, knowing that every time you add new element it will be at the end of the matrix
                     L_Diagonal[cg] = value;
                     L_Values[elem_to_push] = value;
                     L_Col_Index[elem_to_push] = cg;
@@ -529,10 +546,11 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
 
                     }
                     elem_to_push++;
-                }//now using the values from diagonals we can find other values
+                }//fidning other values of the L matrix
                 else
                 {
                     T sum = 0;
+                    //Optimized way to find sum of L[col][i]*L[row][i] for all i<col
                     for (int cr = L_Row_Position[r]; cr < L_Row_Position[r+1]; cr++)
                     {
                         if (L_Col_Index[cr] >= cg)
@@ -555,14 +573,16 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
                         }
                     }
 
+                    //Check if element at given column exist in the input matrix
                     if (this->col_index[elem] == cg)
                     {
                         sum = sum + this->values[elem];
                         elem++;
                     }
-                    //Lower->setvalues(value, r, cg);
+                    //If sum is different than 0 update the L matrix
                     if (sum != 0)
                     {
+                        //In order to make this more optimized we store values of the diagonal 
                         T value = sum / L_Diagonal[cg];
                         
                         L_Values[elem_to_push] = value;
@@ -580,6 +600,7 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
     auto* y = new T[this->rows];
     T s;
     y[0] = vect.values[0];
+    //2 Find y by forward substitution
     for (int r = 0; r < this->rows; r++)
     {
         s = 0;
@@ -603,43 +624,38 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
     auto* Lower_Transpose = new CSRMatrix <T>(this->rows, this->cols, L_Row_Position[this->rows], true);
     auto* values_in_row = new int[this->rows];
     auto* values_in_col = new int[this->rows];
-
+    // 3 Transpose of the matrix in an optimized way
+    // Initialize row_positions of lower tranpose to 0
     for (int i = 0; i < this->rows + 1; i++)
     {
-        //std::cout << "At i " << i << " " <<L_Row_Position[i] << "\n";
         Lower_Transpose->row_position[i] = 0;
     }
-    //for(int i=0;)
+    //Initialize two temporary arrays which help in calculating transpose
     for (int i = 0; i < this->rows; i++)
     {
         
         values_in_row[i] = 0;
         values_in_col[i] = 0;
     }
+    // Calculate number of occurences in each column
     for (int i = 0; i < L_Row_Position[this->rows]; i++)
     {
         values_in_col[L_Col_Index[i]]++;
-       // std::cout << "FUCK " << L_Col_Index[i] << "\n";
     }
+    // Based on that update Lower_Transpose row positions 
     for (int i = 1; i < this->rows + 1; i++)
     {
         Lower_Transpose->row_position[i] = Lower_Transpose->row_position[i-1]+ values_in_col[i-1];
     }
-
+    //Knowing row positions iterate over all values and assign them in correct order to the vector of values of tranposed matrix
     for (int i = 0; i < this->rows; i++)
     {
         for (int j = L_Row_Position[i]; j < L_Row_Position[i + 1]; j++)
         {
 
-            //std::cout << "F"<< L_Row_Position[this->rows] << "\n";
-            //std::cout << "A"<<L_Values[j] << "\n";
-            //std::cout << "AA"<< L_Col_Index[j] << "\n";
-            //
-            //std::cout << "B"<<values_in_row[L_Col_Index[j]] << "\n";
-            //std::cout << "C"<<row_position[L_Col_Index[j]] << "\n";
 
             Lower_Transpose->values[Lower_Transpose->row_position[L_Col_Index[j]] + values_in_row[L_Col_Index[j]]] = L_Values[j];
-            //std::cout << "D" << Lower_Transpose->values[Lower_Transpose->row_position[L_Col_Index[j]] + values_in_row[L_Col_Index[j]]] << "\n";
+            
             Lower_Transpose->col_index[Lower_Transpose->row_position[L_Col_Index[j]] + values_in_row[L_Col_Index[j]]] = L_Col_Index[j];
             values_in_row[L_Col_Index[j]]++;
         }
@@ -647,7 +663,7 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
     
     delete[] values_in_row;
     delete[] values_in_col;
-    
+    //4 Finally use back substituion on transpoed vector 
     for (int r = this->rows - 1; r >= 0; r--) //i loop from the bottom to the top row
     {
         T sum = 0;
@@ -656,9 +672,9 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
             int c = Lower_Transpose->col_index[val_index];
             if (c > r)
             {
-                // sum the mat-vec product for all the columns on the right of pivot
+
                 sum += Lower_Transpose->values[val_index] * vect_output.values[c];
-                //sum += lower[c * this->cols + r] * vect_output.values[c];
+ 
             }
         }
         vect_output.values[r] = (y[r] - sum) / Lower_Transpose->values[Lower_Transpose->Get_Value_Index(r, r)];
