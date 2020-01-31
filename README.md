@@ -31,7 +31,7 @@ To use the solver, simply download and load the following files ([Matrix.h](Matr
 
 ## User instructions
 
-Example usage:
+Basic example usage:
 
  (a) **For dense solvers** (3 x 3 matrix)
  
@@ -127,7 +127,9 @@ A more detailed example on how to use the solver can be found in the second bloc
 
 ## Testing
 
-To test the linear solvers, additionally download and load the [Test.h](Test.h) and [Test.cpp](Test.cpp) files. The class `Test` will test the linear solvers on multiple sizes of diagonally-dominant matrices, **A** that are randomly generated. To run the test, uncomment the following blocks in the [Main_test_solver.cpp](Main_test_solver.cpp) file.
+To test the linear solvers, additionally download and load the [Test.h](Test.h) and [Test.cpp](Test.cpp) files. The class `Test` will test all the solver methods on multiple sizes of diagonally-dominant matrices, **A** and vector **b** that are randomly generated. The tests are done by comparing the original vector **b**, to the one obtained by multiplying the matrix, **A** with the output solution, **x** for each method. 
+
+To run the test, uncomment the following blocks in the [Main_test_solver.cpp](Main_test_solver.cpp) file.
  
  (a) **Test for dense solvers**
  
@@ -145,3 +147,4 @@ To test the linear solvers, additionally download and load the [Test.h](Test.h) 
     Sparse_Solver.Run_Test(verb_0, CSR_Solver_Test, All_Sparse);
 ```
 
+The first input argument is an `enum` type which dicates the amount of information printed on the screen when the tests are run. `verb_0` will displays the minimum amount of information which is whether the method is solving the system correctly. Additionally, `verb_1` will also shows the discrepancy between the actual **x** and the expected **x** for each solver method.
