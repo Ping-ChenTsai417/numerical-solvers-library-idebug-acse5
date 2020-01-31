@@ -1,7 +1,9 @@
-#pragma once
+#ifndef MY_MATRIX_TESTS
+
+#define MY_MATRIX_TESTS
+
 #include "Matrix.h"
 #include "CSRMatrix.h"
-
 #include <random>
 
 template <class T>
@@ -28,6 +30,10 @@ public:
 	void File_for_python(Matrix<T>& M, Matrix<T>& b, Matrix<T>& x, std::string file_name);
 
 	void Solver_Timing_Test_All();
+	double Test_Timing_Dense(Matrix<T>& Vector_Actual_B, Matrix<T>& M, int Solver);
+	double Test_Timing_Sparse(Matrix<T>& Vector_Actual_B, CSRMatrix<T>& M, int Solver);
+	void Time_Solvers_Dense();
+	void Time_Solvers_Sparse();
 
 	void Run_Test(int verbose, int test_index, int configuration);
 	void Run_General_Solver(int configuration);
@@ -52,9 +58,10 @@ public:
 	int verbose = 0;
 	bool Fatal = false;
 	bool Fail = false;
+	std::string Test_Number = "0";
 
 };
 
 enum test_enum { General_Solver_Test, CSR_Solver_Test, Timing_Test,Last_Test};
 enum verbosity { verb_0,verb_1,verb_2,verb_3,verb_4 };
-
+#endif // !MY_MATRIX_TESTS
