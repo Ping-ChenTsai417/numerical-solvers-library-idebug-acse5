@@ -1,6 +1,8 @@
-#pragma once
 #include <string>
+#ifndef MY_MATRIX_CLASS
 
+#define MY_MATRIX_CLASS
+#include <vector>
 template <class T>
 class Matrix
 {
@@ -10,6 +12,7 @@ public:
     T* values = nullptr;
     int rows = -1;
     int cols = -1;
+    double tol = 0.000001; // tolerance for conjugate gradient
 
    // Constructor where we want to preallocate memory ourselves
    Matrix(int rows, int cols, bool preallocate);
@@ -46,6 +49,7 @@ public:
    void Gauss_Jordan_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
    void Cramers_Solver(const Matrix<T>& vect_b, Matrix<T>& vect_output);
 
+
    // Additional functions for the solvers
    void decompose_LU(Matrix* upper, Matrix* lower, Matrix* permut);
    void forward_substitution(Matrix* lower, T* vect_in, T* vect_out);
@@ -61,7 +65,7 @@ public:
 protected:
    bool preallocated = false;
 
-   double tol = 0.000000000001; // tolerance for conjugate gradient
+
    const double near_zero = 0.00000001; // almost equivalent to 0, use it to avoid scalar divided by 0
 
 // Private variables - there is no need for other classes 
@@ -74,5 +78,9 @@ private:
 template <class T>
 bool check_error(Matrix<T>& mat, Matrix<T>& vect, Matrix<T>& vect_output);
 
-enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan, Cramers, Last_Dense, All_Dense};
+
+
+
+enum solver_method_dense { Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan,Cramers, Last_Dense, All_Dense};
 enum solver_method_csr   { Jacobi_CSR, Gauss_Siedel_CSR, Cholesky_CSR, Conjugate_Gradient_CSR, Last_Sparse, All_Sparse};
+#endif
