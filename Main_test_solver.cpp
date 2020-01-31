@@ -38,7 +38,7 @@ int main()
 	//call the solver method on dense matrix to solve the equation M*x=b
 	//here we use LU solver, there are many others avaiable,just change the last parameter
 	//to one of: Jacobi, Gauss_Siedel, Gaussian, LU, Inverse, Cholesky, Conjugate_Gradient, Gauss_Jordan,Cramers
-	DenseMatrix->solve(*Vector_B, *Vector_X, Gauss_Jordan);
+	DenseMatrix->solver(*Vector_B, *Vector_X, Gauss_Jordan);
 
 	//now we will do some tests to check if the result is correct
 
@@ -109,14 +109,14 @@ int main()
 	/*
     Test<double> General_Solver;
     std::cout << "Test for Dense solvers:\n";
-    General_Solver.Run_Test(verb_0, General_Solver_Test,All_Dense);
+    General_Solver.Run_Test(verb_1, General_Solver_Test,All_Dense);
 	*/
 ///===============================================================================================================
 	/////////UNCOMMENT BLOCK OF CODE BELOW TO PERFORM TESTS ON SPARSE SOLVERS
     /*
     Test<double> Sparse_Solver;
 	std::cout << "Test for Sparse solvers:\n";
-    Sparse_Solver.Run_Test(verb_0, CSR_Solver_Test, All_Sparse);
+    Sparse_Solver.Run_Test(verb_1, CSR_Solver_Test, All_Sparse);
 	*/
 ///===============================================================================================================
 	////////UNCOMMENT BLOCK OF CODE BELOW TO PERFORM TIMING TESTS ON SPARSE MATRICES
