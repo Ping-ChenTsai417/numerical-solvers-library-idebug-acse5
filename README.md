@@ -19,4 +19,4 @@ Implements different methods to solve a linear system **Ax = b**, where **A** is
 1.  Jacobi method
 2.  Gauss-Seidel method
 3.  Conjugate gradient method
-4.  Cholseky method
+4.  Cholesky method
