@@ -161,16 +161,7 @@ template <class T>
 void Matrix<T>::matVecMult(T* vect_in, T* vect_out)
 {
 	// Need to ensure the dimension is correct when passing vec_in and vec_out
-	// The output hasn't been preallocated, so we are going to do that
-	if (vect_out == nullptr)
-	{
-		vect_out = new T[this->rows];
-	}
-	// Set values to zero before hand
-	for (int i = 0; i < this->rows; i++)
-	{
-		vect_out[i] = 0;
-	}
+	// and the pointer is valid to use this function
 
 	for (int i = 0; i < this->rows; i++) // loop over rows of the matrix
 	{
@@ -339,6 +330,7 @@ void Matrix<T>::solver(const Matrix<T>& vect_b, Matrix<T>& vect_output, int type
     else
     {
         vect_output.values = new T[this->rows];
+		vect_output.preallocated = true;
     }
     // Set values to zero before hand in case user didn't do it
     for (int i = 0; i < vect_output.size_of_values; i++)
