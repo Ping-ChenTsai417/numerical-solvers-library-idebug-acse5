@@ -23,18 +23,20 @@ The classes implement multiple methods to solve the linear system **Ax = b**, wh
 
 ## Documentation
 
-A short report on the assignment can be found here [Assignment_Report.pdf](Assignment_Report.pdf).
+A short report on the assignment can be read here [Assignment_Report.pdf](Assignment_Report.pdf).
 
 ## Installation guide
 
 To use the solver, simply download and load the following files ([Matrix.h](Matrix.h), [Matrix.cpp](Matrix.cpp), [CSRMatrix.h](CSRMatrix.h), [CSRMatrix.cpp](CSRMatrix.cpp) and [Main_test_solver.cpp](Main_test_solver.cpp)) into a new project in Visual Studio to compile and run them.
 
+The [Main_test_solver.cpp](Main_test_solver.cpp) contains the main method which are seperated into blocks of codes that can solve the linear system for a randomly-generated or user-defined input, test the linear solvers and run timing tests. 
+
 ## User instructions
 
-Basic example usage:
+### (a) For dense solvers (3 x 3 matrix)
 
- (a) **For dense solvers** (3 x 3 matrix)
- 
+Example usage:
+
 ```c++
 #include"Matrix.h"
 #include"Matrix.cpp"
@@ -45,21 +47,23 @@ void main()
 {
     int rows = 3;
     int cols = 3;
-    
+
+    // fill in values for mat_A_dense and vect_b
+    double A[9] = { 4,-1,1,-1,2,-1,1,-1,4 };
+    double b[3] = { 1,2,1 };
+
     // create pointers to objects of type Matrix
-    auto* mat_A_dense = new Matrix<double>(rows, cols, true);
-    auto* vect_b = new Matrix<double>(rows, 1, true);
-    auto* vect_output = new Matrix<double>(rows, 1, true);
-    
-    // fill in values for mat_A_dense and vect_b....
+    auto* mat_A_dense = new Matrix<double>(rows, cols, A);
+    auto* vect_b = new Matrix<double>(rows, 1, b);
     // vect_out will be initialised to zero in the solver method
-       
-    // solving mat_A_dense * vect_output = vect_b using Gauss-Siedel method
+    auto* vect_output = new Matrix<double>(rows, 1, true);
+
+    // solving mat_A_dense * vect_output = vect_b using dense Gauss-Siedel method
     mat_A_dense->solver(*vect_b, *vect_output, Gauss_Siedel);
-    
+
     // print out solution to the screen
     vect_output->printValues();
-    
+
     // deallocate the memory
     delete mat_A_dense;
     delete vect_b;
@@ -67,7 +71,14 @@ void main()
 }
 ```
 
-To use a different solver method, the user needs to change the third input argument (which is an `enum` type) according to as follows:
+Output:
+
+```c++
+Printing values
+0.5  1.5  0.5
+```
+
+To use a different dense matrix solver, the user has to change the third input argument (which is an `enum` type) according to as follows:
 
 1.  Jacobi method - `Jacobi`
 2.  Gauss-Siedel method - `Gauss_Siedel`
@@ -79,7 +90,9 @@ To use a different solver method, the user needs to change the third input argum
 8.  Gauss-Jordan elimination method - `Gauss_Jordan`
 9.  Cramer's Rule - `Cramers`
 
-(b) **For sparse solvers** (3 x 3 matrix)
+### (b) For sparse solvers (3 x 3 matrix)
+
+Example usage:
 
 ```c++
 #include"Matrix.h"
@@ -93,41 +106,53 @@ void main()
 {
     int rows = 3;
     int cols = 3;
-    
-    // create pointers to objects of type Matrix and CSRMatrixs
-    auto* mat_A_sparse = new CSRMatrix<double>(rows, cols, true);
-    auto* vect_b = new Matrix<double>(rows, 1, true);
-    auto* vect_output = new Matrix<double>(rows, 1, true);
-    
-    // fill in values for mat_A_sparse and vect_b....
-    // vect_out will be initialised to zero in the solver method
+    int nnzs = 5;
 
-    // solving mat_A_sparse * vect_output = vect_b using Gauss-Siedel method
+    // fill in values for mat_A_sparse and vect_b
+    double A[5] = { 3,4,1,1,2 };
+    int row_position[4] = { 0,1,3,5 };
+    int col_index[5] = { 0,1,2,1,2 };
+    double b[3] = { 9,5,3 };
+
+    // create pointers to objects of type CSRMatrix and Matrix
+    auto* mat_A_sparse = new CSRMatrix<double>(rows, cols, nnzs, A, row_position, col_index);
+    auto* vect_b = new Matrix<double>(rows, 1, b);
+    // vect_out will be initialised to zero in the solver method
+    auto* vect_output = new Matrix<double>(rows, 1, true);
+
+    // solving mat_A_sparse * vect_output = vect_b using sparse Gauss-Siedel method
     mat_A_sparse->solver(*vect_b, *vect_output, Gauss_Siedel_CSR);
-    
+
     // print out solution to the screen
     vect_output->printValues();
-    
+
     // deallocate the memory
     delete mat_A_sparse;
     delete vect_b;
     delete vect_output;
-}   
+} 
 ```
 
-To use a different solver method, the user needs to change the third input arguments (which is an `enum` type) according to as follows:
+Output:
+
+```c++
+Printing values
+3  1  1
+```
+
+To use a different sparse matrix solver, the user has to change the third input argument (which is an `enum` type) according to as follows:
 
 1.  Jacobi method - `Jacobi_CSR`
 2.  Gauss-Siedel method - `Gauss_Siedel_CSR`
 3.  Conjugate gradient method - `Conjugate_Gradient_CSR`
 4.  Cholesky method - `Cholesky_CSR`
 
-A more detailed example on how to use the solver can be found in the second block of the [Main_test_solver.cpp](Main_test_solver.cpp) file. 
+A more detailed example on how to use the solver can be found in the [Main_test_solver.cpp](Main_test_solver.cpp) file. 
 
 
 ## Testing
 
-To test the linear solvers, additionally download and load the [Test.h](Test.h) and [Test.cpp](Test.cpp) files. The class `Test` will test all the solver methods on multiple sizes of diagonally-dominant matrices, **A** and vector **b** that are randomly generated. The tests are done by comparing the original vector **b**, to the one obtained by multiplying the matrix, **A** with the output solution, **x** for each method. 
+To test the linear solvers, additionally download and load the [Test.h](Test.h) and [Test.cpp](Test.cpp) files. The class `Test` will test all the solver methods on multiple sizes of diagonally-dominant matrices, **A** and vector, **b** that are randomly generated. The tests are done by comparing the original vector **b**, to the one obtained by multiplying the matrix, **A** with the output solution, **x** for each method. 
 
 To run the test, uncomment the following blocks in the [Main_test_solver.cpp](Main_test_solver.cpp) file.
  
@@ -147,4 +172,4 @@ To run the test, uncomment the following blocks in the [Main_test_solver.cpp](Ma
     Sparse_Solver.Run_Test(verb_0, CSR_Solver_Test, All_Sparse);
 ```
 
-The first input argument is an `enum` type which dicates the amount of information printed on the screen when the tests are run. `verb_0` will displays the minimum amount of information which is whether the method is solving the system correctly. Additionally, `verb_1` will also shows the discrepancy between the actual **b** and the **b** obtained from multiplying  **A** with calculated vector **x** for each solver method.
+The first input argument is an `enum` type which determines the amount of information printed on the screen when the tests are run. `verb_0` will only display whether the methods are solving the system correctly. Inputting `verb_1` will additionally show the value of error (sum of the absolute difference between corresponding elements of vectors **b**) for each method.
