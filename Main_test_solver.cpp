@@ -91,8 +91,8 @@ int main()
 		vector_out2->values[j] = 0;
 	}
 	//call the solvers 
-	mat->solve(*vector_b, *vector_out, Gauss_Siedel);
-	mat->solve(*vector_b, *vector_out2, LU);
+	mat->solver(*vector_b, *vector_out, Gauss_Siedel);
+	mat->solver(*vector_b, *vector_out2, LU);
 	//print the resulting vectors_output
 	std::cout << "Now printing result values from Gauss-Seidel:" << std::endl;
 	vector_out->printMatrix();
