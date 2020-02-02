@@ -176,7 +176,7 @@ The first input argument is an `enum` type which determines the amount of inform
 
 ## Note: BandedMatrix
 
-`BandedMatrix` class aims to permutate a sparse matrix into a banded matrix. The class contains the Reverse Cuthill-Mckee algorithm (`void Cuthill_Mckee(vector<T> degree_array)`) but still with a few bugs. Although the class is not yet ready for the user to  completely utilise it, the user may still be able to:
+`BandedMatrix` class (in [BandedMatrix.h](BandedMatrix.h), [BandedMatrix.cpp](BandedMatrix.cpp)) aims to permutate a sparse matrix into a banded matrix. The class contains the Reverse Cuthill-Mckee algorithm (`void Cuthill_Mckee(vector<T> degree_array)`) but with a few bugs in it. Although the class is not yet ready for the user to completely utilise it, the user can still be able to:
 
 1.	Compute the degree of nodes for a sparse matrix
 2.	Reverse the order of a permutation array
@@ -203,7 +203,7 @@ To check the example output, uncomment the following lines in the [Main_test_sol
     {
         banded_mat->row_position[i] = IA2[i];
     }
-    cout << endl << "============================Print Original Sparse Matrix============================" << endl;
+    cout << endl << "==========================Print Original Sparse Matrix==========================" << endl;
     banded_mat->printBandedMatrix();
     
     // Do not run the following line , since Cuthill_Mckee() has bugs inside.
