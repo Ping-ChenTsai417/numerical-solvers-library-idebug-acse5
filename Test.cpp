@@ -612,7 +612,7 @@ void Test<T>::Time_Solvers_Sparse()
     //Run a detailed test with lots of configurability (run it on the sparse matrix).
     //It allows to compare the robustness and timing of different solver depending on size and type of matrix
     //Afterwards it outputs the results to the file
-    for (int j = 1; j < 20; j++)
+    for (int j = 1; j < 21; j++)
     {
 
         int size = 10;
