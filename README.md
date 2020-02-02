@@ -29,7 +29,7 @@ A short report on the assignment can be read here [Assignment_Report.pdf](Assign
 
 To use the solver, simply download and load the following files ([Matrix.h](Matrix.h), [Matrix.cpp](Matrix.cpp), [CSRMatrix.h](CSRMatrix.h), [CSRMatrix.cpp](CSRMatrix.cpp) and [Main_test_solver.cpp](Main_test_solver.cpp)) into a new project in Visual Studio to compile and run them.
 
-The [Main_test_solver.cpp](Main_test_solver.cpp) contains the main method which are seperated into blocks of codes that can solve the linear system for a randomly-generated or user-defined input, test the linear solvers and run timing tests. 
+The [Main_test_solver.cpp](Main_test_solver.cpp) contains the main method which are seperated into blocks of codes that can solve the linear system for a randomly-generated or a user-defined input, test the linear solvers and run timing tests. 
 
 ## User instructions
 
@@ -173,3 +173,56 @@ To run the test, uncomment the following blocks in the [Main_test_solver.cpp](Ma
 ```
 
 The first input argument is an `enum` type which determines the amount of information printed on the screen when the tests are run. `verb_0` will only display whether the methods are solving the system correctly. Inputting `verb_1` will additionally show the value of error (sum of the absolute difference between corresponding elements of vectors **b**) for each method.
+
+## Note: BandedMatrix
+
+`BandedMatrix` class aims to permutate a sparse matrix into a banded matrix. The class contains the Reverse Cuthill-Mckee algorithm (`void Cuthill_Mckee(vector<T> degree_array)`) but still with a few bugs. Although the class is not yet ready for the user to  completely utilise it, the user may still be able to:
+
+1.	Compute the degree of nodes for a sparse matrix
+2.	Reverse the order of a permutation array
+3.	Permutate a sparse matrix into a banded matrix using the correct permutation array, R
+
+To check the example output, uncomment the following lines in the [Main_test_solver.cpp](Main_test_solver.cpp) file.
+    
+```c++
+    //Banded Class
+    int nnzs2 = 22;
+    int rows2 = 8;
+    int cols2 = 8;
+    double mat_val2[22]{ 1, 3, 3, 4, 6, 6, 4, 8, 1, 1, 2, 3, 1, 5, 6, 7, 2, 2, 1, 6, 2, 4 };
+    double IA2[9]{ 0, 2, 6, 9, 11, 14, 17, 19, 22 };
+    double JA2[22]{ 0, 4, 1, 2, 5, 7, 1, 2, 4, 3, 6, 0, 2, 4, 1, 5, 7, 3, 6, 1, 5, 7 };
+
+    auto* banded_mat = new BandedMatrix<double>(rows2, cols2, nnzs2, true);
+    for (int i = 0; i < nnzs2; i++)
+    {
+        banded_mat->values[i] = mat_val2[i];
+        banded_mat->col_index[i] = JA2[i];
+    }
+    for (int i = 0; i < rows2 + 1; i++)
+    {
+        banded_mat->row_position[i] = IA2[i];
+    }
+    cout << endl << "============================Print Original Sparse Matrix============================" << endl;
+    banded_mat->printBandedMatrix();
+    
+    // Do not run the following line , since Cuthill_Mckee() has bugs inside.
+    // banded_mat->Run_Reverse_Cuthill_Mckee();
+    
+    // However, other functions works well
+
+    // Get the degree from the adjacency matrix
+    vector<double> degree = banded_mat->get_degree();
+    cout << endl << "Print node degree: " ;
+    for (auto i : degree)
+        cout << i << ' ';
+    cout << endl;
+
+    // Assume Cuthill_Mckee() works perfectly, then R is computed correcltly
+    // See BandedMatrix.h for initialising vector R.   ----->    vector<double> R{ 0, 4, 2, 1, 5, 7, 3, 6 };
+    banded_mat->reverse_R();
+    banded_mat->permutate_to_Band();
+
+    delete banded_mat;
+```
+
