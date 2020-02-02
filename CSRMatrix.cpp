@@ -656,7 +656,7 @@ void CSRMatrix<T>::Cholesky_CSR_Solver(const Matrix<T>& vect, Matrix<T>& vect_ou
 
             Lower_Transpose->values[Lower_Transpose->row_position[L_Col_Index[j]] + values_in_row[L_Col_Index[j]]] = L_Values[j];
             
-            Lower_Transpose->col_index[Lower_Transpose->row_position[L_Col_Index[j]] + values_in_row[L_Col_Index[j]]] = L_Col_Index[j];
+            Lower_Transpose->col_index[Lower_Transpose->row_position[L_Col_Index[j]] + values_in_row[L_Col_Index[j]]] = i;
             values_in_row[L_Col_Index[j]]++;
         }
     }
