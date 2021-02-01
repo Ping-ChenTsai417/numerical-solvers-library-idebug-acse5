@@ -1,0 +1,89 @@
+template <class T>
+void CSRMatrix<T>::setvalues(T value, int i, int j)//inserts value to the row i and column j (thinking in dense matrix format)
+{
+    //Store value at which we should insert new element to the values array
+    int insert_at_index;
+    //Flag to tell us if we found a place to insert a new element
+    bool not_found = true;
+    //If there are no elements in a row ie. before and after given row num of elements is the same we immiedietely know the index at which we should insert
+    //the value onto the values array, it will just be to the row_position[i]
+    //we now that number of nnzv before the value being inserted is equal to row_position[i]
+    if (this->row_position[i] == this->row_position[i + 1])
+    {
+        insert_at_index = row_position[i];
+    }
+    else
+    {
+        //Otherwise we have to iterate over elements in a given row and compare it to the column we want to insert
+        //so bascially we will check if the other value/values in the same row are before or after our value
+        for (int counter = this->row_position[i]; counter < this->row_position[i + 1]; counter++)
+        {
+            //If there is already element in a given column just replace it with different value
+            if (this->col_index[counter] == j)
+            {
+                this->values[counter] = value;
+                return;
+            }
+            //If we went past the column that we want to insert to, we know the position that we should insert
+            if (this->col_index[counter] > j)
+            {
+                insert_at_index = counter;
+                not_found = false;
+                break;
+            }
+        }
+
+        //If our element would be the last in the given row, we again know at which position to insert value
+        if (not_found)
+        {
+            insert_at_index = this->row_position[i + 1];
+        }
+    }
+
+    //Create new arrays, one larger since we will have one more element
+    //we need to change 3 things
+    //array of values
+    //array of columns indexes
+    //array of row_positions
+    auto tmp_values = new T[this->nnzs + 1];
+    auto tmp_col_index = new int[this->nnzs + 1];
+
+    //Account for the additional element in all row positions
+    //so increase number of nnzv present in each row after the row to which we will be inserting
+    for (int L = i + 1; L < this->rows + 1; L++)
+    {
+        this->row_position[L]++;
+    }
+
+    //We want to insert element at given position. If index is smaller than that positon values stay the same. For index equal to that position we insert element. All elements larger than index will shift one to the right
+    for (int counter = 0; counter < this->nnzs + 1; counter++)
+    {
+        if (counter < insert_at_index)//if our value goes after this one nothing happens
+        {
+            tmp_values[counter] = this->values[counter];
+            tmp_col_index[counter] = this->col_index[counter];
+        }
+        else if (counter == insert_at_index)//here we insert our value
+        {
+            tmp_values[counter] = value;
+            tmp_col_index[counter] = j;
+        }
+        else//here we shift all values that come after our inserted value
+        {
+            tmp_values[counter] = this->values[counter - 1];
+            tmp_col_index[counter] = this->col_index[counter - 1];
+        }
+    }
+    //Update arrays of values and col_index as well as increase number of elements.
+    auto old_values = this->values;
+    auto old_col_index = this->col_index;
+
+    this->nnzs++;
+    this->values = tmp_values;
+    this->col_index = tmp_col_index;
+
+    delete old_values;
+    delete old_col_index;
+
+    return;
+}

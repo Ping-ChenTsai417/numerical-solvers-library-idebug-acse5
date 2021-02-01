@@ -1,0 +1,29 @@
+void Matrix::Jacobi(Matrix& A, Matrix& b)
+{
+    //Matrix* output = new Matrix(b.rows, b.cols, true); // make it unique pointer
+    for (int i = 0; i < A.rows; i++)
+    {
+        for (int j = 0; j < A.cols; j++)
+        {
+            // Exlude diaganal multiplication
+            if (i != j)
+            {   this->values[i] += A.values[i * A.cols + j] * b.values[j];
+            }
+            else // when i = j
+                this->values[i] += 0;
+        }
+    }
+
+}
+
+
+
+void Matrix::Jacobi(Matrix& A, Matrix& b)
+
+template <class T>
+Matrix<T>* Matrix<T>::Jacobi(Matrix<T>& A, Matrix<T>& b)
+
+Matrix* temp = new Matrix(b.rows, b.cols, true);
+//turn to unique pointer
+
+unique_ptr<Matrix[]> temp(new Matrix(b.rows, b.cols, true))
